@@ -1,7 +1,13 @@
 ---
 title: "Del 1: Laktatterskel"
 format: html
+editor_options: 
+  chunk_output_type: console
 ---
+
+# Del 1: Laktatterskel
+
+Vi valgte å bruke cyclingstudy datasettet med tanke på at vi ikke testet laktatprofiler under reliabilitets-prosjektet vårt. Dette datasettet inneholder data fra 21 forsøkspersoner, der de fleste har gjennomført en laktatprofil på fire ulike tidspunkt: pre, meso1, meso2 og meso3. 
 
 ```{r}
 
@@ -15,6 +21,20 @@ library(gtExtras)
 
 data("cyclingstudy")
 data("hypertrophy")
+
+```
+
+```{r}
+
+#Tabbelen viser laktatterskel
+
+cyclingstudy %>% 
+  select(subject, group, timepoint, lac.125:lac.375) %>% 
+  pivot_longer(names_to = "x",
+               values_to = "lactate",
+               names_transform = list(x = as.nomeric),
+               cols = lac.125:lac.375) %>% 
+  
 
 ```
 
