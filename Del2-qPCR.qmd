@@ -14,10 +14,17 @@ library(readxl)
 
 data_qpcr <- read_excel("Data/Delta-delta-metode-RNA-qPCR.xlsx") 
 
+data_gene <- read_excel("Data/Gene-fam-normalization.xlsx")
+
 ```
 
+
+Beregne reaksjonseffiktiviteten
 ```{r} 
 
+10^(-1/log10(0.008))-1 
+
+## det ovenfor er ifølge chatGPT formelen for å finne reaksjonseffektiviteten. Her har jeg bare lagt inn en slope (0.008) der reaksjonseffiktiviteten blir ca. 2
 
 
 ```
