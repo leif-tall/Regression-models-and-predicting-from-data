@@ -3,4 +3,21 @@ title: "Del 1: Laktatterskel"
 format: html
 ---
 
+```{r}
+
+library(tidyverse)
+library(exscidata)
+library(gt)
+library(modelr)
+library(gtExtras)
+
+# Importert datasett
+
+data("cyclingstudy")
+data("hypertrophy")
+
+```
+
+
+
 
