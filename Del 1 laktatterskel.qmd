@@ -24,6 +24,7 @@ data("hypertrophy")
 
 ```
 
+
 ```{r}
 
 #Tabbelen viser laktatterskel
@@ -33,8 +34,66 @@ cyclingstudy %>%
   pivot_longer(names_to = "x",
                values_to = "lactate",
                names_transform = list(x = as.nomeric),
-               cols = lac.125:lac.375) %>% 
+               cols = lac.125:lac.375) %>%
+  filter(!is.na(lactate)) %>% 
+  group_by(subject, timepoint) %>% 
+  nest() %>% 
+  mutate(model = map(data, subject_model),
+         watt_range = list(watt = seq(from = 125, to = 375, by = 0.1)),
+         df = map(watt_range, df_fun),
+         pred = map2(df, model, add_predictions)) %>% 
+  unnest(pred) %>% 
+  filter(abs(pred - 4) == min(abs(pred - 4)) |
+           abs(pred - 2) == min(abs)pred - 2))) %>% 
+  select(subject, timepoint, x, pred) %>% 
+  mutate(lactate = if_else(pred > 3, "ana", "aer")) %>% 
+  select(-pred) %>% 
+  rename(watt = x) %>% 
+  pivot_wider(names_from = c(timepoint, lactate),
+              values_from = watt) %>% 
+  select(subject, pre_aer, meso1_aer, meso2_aer, meso3_aer, pre_ana, meso1_ana, meso2_ana, meso3_ana) %>% 
+  filter(subject <= 4) %>% 
+  gt() %>% 
+  tab_spanner(columns = pre_aer:meso3_aer, label = "LT at 2 mmol*L") %>% 
+  tab_spanner(columns = pre_ana:meso_ana, label = "LT at 4 mmol*L") %>%
+  fmt_number(columns = pre_aer:meso_ana, decimals = 0) %>% 
+  gt_add_divider(columns = meso3_aer, color = "lightgrey", style = "dotted") %>% 
+  cols_label(subject = "Subject",
+             pre_aer = "Pre",
+             meso1_aer = "Meso1",
+             meso2_aer = "Meso2",
+             meso3_aer = "Meso3",
+             pre_ana = "Pre",
+             meso1_ana = "Meso1",
+             meso2_ana = "Meso2",
+             meso3_ana = "Meso3") %>% 
+  tab_footnote(footnote = "Vis de fire første radene i datasettet") %>% 
+  tab_footnote(footnote = "forkortelser: LT, laktatterskel")
   
+
+  
+
+```
+
+
+```{r}
+
+library(tidyverse)
+library(exscidata)
+
+cyclingstudy %>% 
+  select(subject, group, timepoint, lac.225:lac.375) %>%
+  filter(timepoint == "pre", subject == 10) %>% 
+  pivot_longer(names_to = "watt",
+               values_to = "lactate",
+               names_prefix = "lac",
+               names_transform = list(watt = as.numeric),
+               cols = lac.225:lac.375) %>%
+  filter(!is.na(lactate)) %>% 
+  ggplot(aes(watt, lactate, group = subject)) +
+  geom_line(lty = 2) + 
+  geom_point(shape = 21, fill = "green", size = 2.5)
+
 
 ```
 
