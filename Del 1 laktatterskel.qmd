@@ -27,13 +27,19 @@ data("hypertrophy")
 
 ```{r}
 
+#| echo: false
+#| warning: false
+#| message: false
+#| label: "tbl-lt"
+#| tbl-cap: "**Calculated Lactate Threshold**"
+
 #Tabbelen viser laktatterskel
 
 cyclingstudy %>% 
   select(subject, group, timepoint, lac.125:lac.375) %>% 
   pivot_longer(names_to = "x",
                values_to = "lactate",
-               names_transform = list(x = as.nomeric),
+               names_transform = list(x = as.numeric),
                cols = lac.125:lac.375) %>%
   filter(!is.na(lactate)) %>% 
   group_by(subject, timepoint) %>% 
@@ -44,7 +50,7 @@ cyclingstudy %>%
          pred = map2(df, model, add_predictions)) %>% 
   unnest(pred) %>% 
   filter(abs(pred - 4) == min(abs(pred - 4)) |
-           abs(pred - 2) == min(abs)pred - 2))) %>% 
+           abs(pred - 2) == min(abs(pred - 2))) %>% 
   select(subject, timepoint, x, pred) %>% 
   mutate(lactate = if_else(pred > 3, "ana", "aer")) %>% 
   select(-pred) %>% 
@@ -57,7 +63,7 @@ cyclingstudy %>%
   tab_spanner(columns = pre_aer:meso3_aer, label = "LT at 2 mmol*L") %>% 
   tab_spanner(columns = pre_ana:meso_ana, label = "LT at 4 mmol*L") %>%
   fmt_number(columns = pre_aer:meso_ana, decimals = 0) %>% 
-  gt_add_divider(columns = meso3_aer, color = "lightgrey", style = "dotted") %>% 
+  gt_add_divider(columns = meso3_aer, color = "grey", style = "dotted") %>% 
   cols_label(subject = "Subject",
              pre_aer = "Pre",
              meso1_aer = "Meso1",
@@ -92,11 +98,55 @@ cyclingstudy %>%
   filter(!is.na(lactate)) %>% 
   ggplot(aes(watt, lactate, group = subject)) +
   geom_line(lty = 2) + 
-  geom_point(shape = 21, fill = "green", size = 2.5)
+  geom_point(shape = 21, fill = "green", size = 2.5) 
+
+cyclingstudy %>% 
+  select(subject, group, timepoint, lac.225:lac.375) %>%
+  filter(timepoint == "pre", subject == 10) %>% 
+  pivot_longer(names_to = "watt",
+               values_to = "lactate",
+               names_prefix = "lac",
+               names_transform = list(watt = as.numeric),
+               cols = lac.225:lac.375) %>%
+  filter(!is.na(lactate)) %>% 
+  ggplot(aes(watt, lactate, group = subject)) +
+  geom_line(lty = 2) + 
+  geom_point(shape = 21, fill = "green", size = 2.5) +
+  geom_hline(yintercept = 4, color = "red") +
+  geom_vline(xintercept = 341.5, color = "blue")
+
 
 
 ```
 
+```{r}
+library(ggtext)
+
+cyclingstudy %>%
+  select(subject, group, timepoint, lac.225:lac.375) %>%
+  filter(timepoint == "pre", subject == 10) %>%
+  pivot_longer(names_to = "watt", 
+               values_to = "lactate", 
+               names_prefix = "lac.",
+               names_transform = list(watt = as.numeric),
+               cols = lac.225:lac.375) %>%
+  filter(!is.na(lactate)) %>%
+  ggplot(aes(watt, lactate, group = subject))  + 
+  geom_line(lty = 2) +
+  geom_point(shape = 21, fill = "lightblue", size = 2.5) +
+  geom_hline(yintercept = 4, color = "red") +
+  geom_vline(xintercept = 341.5, color = "blue") +
+  geom_smooth(method = "lm", se = FALSE, formula = y ~ x, color = "#e41a1c") +
+  geom_smooth(method = "lm", se = FALSE, formula = y ~ poly(x, 2), color = "#377eb8") +
+  geom_smooth(method = "lm", se = FALSE, formula = y ~ poly(x, 3), color = "#4daf4a") +
+
+  labs(subtitle = "Modelling the lactate-workload relationship as<br>
+       <span style = 'color: #377eb8;'>A second degree polynomial</span><br>
+       <span style = 'color: #4daf4a;'>A third degree polynomial</span><br>
+       <span style = 'color: #e41a1c;'>A straight line</span>") +
+  theme(plot.subtitle = element_markdown())
+  
 
 
+```
 
