@@ -1,0 +1,27 @@
+---
+title: "Del-2-qPCR"
+format: pdf
+editor_options: 
+  chunk_output_type: console
+---
+
+Laste ned datasettet. 
+
+```{r} 
+#| echo: FALSE 
+
+library(readxl) 
+
+data_qpcr <- read_excel("Data/Delta-delta-metode-RNA-qPCR.xlsx") 
+
+```
+
+```{r} 
+
+
+
+```
+
+
+
+
