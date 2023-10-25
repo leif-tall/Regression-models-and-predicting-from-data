@@ -5,29 +5,64 @@ editor_options:
   chunk_output_type: console
 ---
 
-Laste ned datasettet. 
+
+## Innledning - beskrivelse av datasett 
+
+Prøvene er hentet fra ferdig ekstrahert cDNA, som kommer fra RNA ifra muskelbiopsier til forsøkspersoner ved en styrketreningstudie ved Høgskolen i Innlandet. W0 er fra en prøve fra en forsøksperson før en treningsperiode, mens W2 har opprinnelse fra prøve tatt etter treningsperioden. 
+
+MHC-I, MHC-IIA og MHC-IIX er molekylet brukes til å lese av primerene på de aktuelle genene slik at vi får amplifisert de genene vi ønsker å kopiere. Deretter får vi målt konsentrasjonen av de aktuelle isoformene av mhc-genet. Dette kan i en studie brukes til å sammenligne muskelfibertypeoverganger. Dersom vi hadde hatt data fra flere forsøkspersoner kunne vi eksempelvis undersøkt om de som f.eks. har trent styrketrening har fått fibertypeoverganger fra type IIX til type IIA. 
+
+C-myc er en annen primer som vi har brukt for å få amplifisert dette genet fra PS1 og PS2 som begge er prøver med miksede cDNA fra flere personer og ved ulike tidspunkt. Alle disse med c-myc som primer fungerer som kontroller. Dette har vi fortynnet 6 ganger og kjørt 3 replikater av samme fortynning. Det er disse kontrollene vi er interessert i for å sjekke om metoden vår har god validitet. I denne delen av arbeidskravet ønsker vi å regne ut reaksjonseffektiviteten til PCR-reaksjonene ved hjelp av det som fungerer som kontrollgenet, c-myc. 
+
+
+Laste ned datasett. 
 
 ```{r} 
-#| echo: FALSE 
+#| echo: false
+#| warning: false
+#| 
 
 library(readxl) 
 
 data_qpcr <- read_excel("Data/Delta-delta-metode-RNA-qPCR.xlsx") 
+data_gene <- read_excel("Data/Gene-fam-normalization.xlsx") 
+cmyc_dat <- read_excel("Data/kontroll-cmyc-qpcr-gr3.xlsx") 
 
-data_gene <- read_excel("Data/Gene-fam-normalization.xlsx")
+cmyc_dat <- cmyc_dat |> 
+  mutate(ct1 = as.numeric(ct1), 
+         ct2 = as.numeric(ct2), 
+         ct3 = as.numeric(ct3)) 
 
 ```
 
 
-Beregne reaksjonseffiktiviteten
 ```{r} 
 
-10^(-1/log10(0.008))-1 
+cmyc_dat_ps1 <- cmyc_dat |> 
+                  filter(grepl("-1$", target_name))
 
-## det ovenfor er ifølge chatGPT formelen for å finne reaksjonseffektiviteten. Her har jeg bare lagt inn en slope (0.008) der reaksjonseffiktiviteten blir ca. 2
+lm(avg_ct ~ log_sample_quan, data = cmyc_dat_ps1) 
+
+BOOM!!
 
 
 ```
+
+
+
+
+
+
+Beregne reaksjonseffektiviteten
+```{r} 
+
+(-1 + 10^(-1/(-4.277))) * 100
+
+## Det ovenfor er formelen for å regne ut reaksjonseffektiviteten for fortynningsserie 1-1 til 1-6. -4.277 er stigningen til regresjonslinjen for ct (x-akse) mot sample quantity (y-akse) for kontrollen. Den er i vårt tilfelle 71.3 % 
+
+
+```
+
 
 
 
