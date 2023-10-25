@@ -2,7 +2,8 @@
 title: "Del-2-qPCR"
 format: pdf
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: console 
+bibliography: referanser/referanser.bib
 ---
 
 
@@ -20,12 +21,10 @@ Laste ned datasett.
 ```{r} 
 #| echo: false
 #| warning: false
-#| 
 
 library(readxl) 
+library(tidyverse)
 
-data_qpcr <- read_excel("Data/Delta-delta-metode-RNA-qPCR.xlsx") 
-data_gene <- read_excel("Data/Gene-fam-normalization.xlsx") 
 cmyc_dat <- read_excel("Data/kontroll-cmyc-qpcr-gr3.xlsx") 
 
 cmyc_dat <- cmyc_dat |> 
@@ -37,32 +36,71 @@ cmyc_dat <- cmyc_dat |>
 
 
 ```{r} 
+#| echo: true 
 
+## ønsker et datasett med bare verdiene for de som inneholder prøve ps1
 cmyc_dat_ps1 <- cmyc_dat |> 
                   filter(grepl("-1$", target_name))
 
-lm(avg_ct ~ log_sample_quan, data = cmyc_dat_ps1) 
+## lage en lineær modell med kontrollene med gjennomsnittlig ct på x-akse og 10-logaritmen til den relative mengden c-myc i de 6 ulike konsentrasjonene som hver har 3 duplikater
+mod_ps1 <- lm(avg_ct ~ log_sample_quan, data = cmyc_dat_ps1) 
 
-BOOM!!
-
+## regne ut reaksjonseffektiviteten for kontrollene med prøve ps1
+e_ps1 <- (10^(-1/mod_ps1$coefficients[2])-1)*100 
+e_ps1  ## vil se resultatet 
 
 ```
 
+For de kontrollrørene som inneholdt prøve "PS1" så var reaksjonseffektiviteten 71.3 %. 
 
 
-
-
-
-Beregne reaksjonseffektiviteten
 ```{r} 
 
-(-1 + 10^(-1/(-4.277))) * 100
+## ønsker å undersøke om reaksjonseffektiviteten er lik for PS2 
 
-## Det ovenfor er formelen for å regne ut reaksjonseffektiviteten for fortynningsserie 1-1 til 1-6. -4.277 er stigningen til regresjonslinjen for ct (x-akse) mot sample quantity (y-akse) for kontrollen. Den er i vårt tilfelle 71.3 % 
+cmyc_dat_ps2 <- cmyc_dat |> 
+                 filter(grepl("-2$", target_name)) 
 
+mod_ps2 <- lm(avg_ct ~ log_sample_quan, data = cmyc_dat_ps2) 
+
+e_ps2 <- (10^(-1/mod_ps2$coefficients[2])-1)*100 
+e_ps2
 
 ```
 
+For rørene med PS2 estimerer vi derimot reaksjonseffektiviteten til å være 250.6 %. For å kunne bruke prøvene videre i analyser ved hjelp av delta-delta-ct-metoden for å kunne si om prosentvis endringer i genuttrykk av myosin tungkjede isoformene etter en treningsintervensjon er det viktig at noen antagelser er møtt. En av disse har vi sjekket her ved at det burde være nærme 100 % reaksjonseffektivitet for PCR-reaksjonene, og våre resultater er ikke innenfor 0.9-1.1. I tillegg er det en annen antagelse om at effektiviteten av målgenet er lik kontrollgenet [livak2014]. Samtidig burde de to ulike kontrollene vi gjorde være like. 
+
+Hvorfor kan det være slik at vi ikke ser det samme resultatet?
+
+At vi ikke er nærmere det som er å forvente kan ha flere årsaker. Lite erfaring med pippetering, samt at ulike personer har pippetert kan tenkes å gi en større unøyaktig. Det var ikke samme person som pippeterte kontrollene med PS1 som pippeterte de med PS2. Denne usikkerheten gir heller ikke mulighet for at eventuelle feil i pippetering kan bli systematisk like mye feil på begge prøvene. 
+
+Resultatene fra PS1-kontrollene var ikke like langt unna 100 %. Sammenligner vi variasjonen i ct-verdiene kan vi med hvordan ct-verdiene forklare hvorfor estimeringen er lengre unna for PS2. 
+
+```{r} 
+#| output: true 
+#| echo: false
+
+cmyc_dat_ps1 |> 
+  rowwise() |> 
+  mutate(sd = sd(c(ct1, ct2, ct3), na.rm = TRUE), 
+         cv = sd/avg_ct) |> 
+  select(target_name, avg_ct, sd, cv) |> 
+  ungroup() |> 
+  print() 
+
+
+cmyc_dat_ps2 |> 
+  rowwise() |> 
+  mutate(sd = sd(c(ct1, ct2, ct3), na.rm = TRUE), 
+         cv = sd/avg_ct) |> 
+  select(target_name, avg_ct, sd, cv) |> 
+  ungroup() |> 
+  print() 
+
+```
+
+
+Definere ct i starten av teksten og pcr
 
 
 
