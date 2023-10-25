@@ -34,7 +34,7 @@ data("hypertrophy")
 library(tidyverse)
 library(exscidata)
 
-data("Cyclingstudy")
+data("cyclingstudy")
 
 Laktatterskel <- cyclingstudy %>%
   select(subject, group, timepoint, lac.125:lac.375) %>%
@@ -46,7 +46,7 @@ Laktatterskel <- cyclingstudy %>%
                cols = lac.125:lac.375) %>%
   filter(!is.na(lactate))
 
-modlaktatterskel <- lm(lactate ~ poly(watt, 3, raw = TRUE), data = Laktatterskel)
+mod_laktatterskel <- lm(lactate ~ poly(watt, 3, raw = TRUE), data = Laktatterskel)
 
 Laktatterskel %>% 
   ggplot(aes(watt, lactate, group = subject)) + 
@@ -55,7 +55,7 @@ Laktatterskel %>%
 
 wattdata <- data.frame(watt = seq(from = 125, to = 375, by = 0.1))
 
-wattdata$pred <- predict(modlaktatterskel, newdata = wattdata)
+wattdata$pred <- predict(mod_laktatterskel, newdata = wattdata) 
 
 lactate.pre <- wattdata %>% 
   filter(abs(pred - 2) == min(abs(pred - 2)) |
@@ -63,7 +63,7 @@ lactate.pre <- wattdata %>%
   mutate(timepoint = "pre",
          lactate = "2mmol")
 
-lactate.pre[2, 4] <- "4mmol"
+lactate.pre[2, 4] <- "4mmol" 
 
 ```
 
@@ -81,7 +81,7 @@ Laktatterskel.meso1 <- cyclingstudy %>%
                cols = lac.125:lac.375) %>%
   filter(!is.na(lactate))
 
-modlaktatterskel.meso1 <- lm(lactate ~ poly(watt, 3, raw = TRUE), data = Laktatterskel.meso1)
+mod_laktatterskel.meso1 <- lm(lactate ~ poly(watt, 3, raw = TRUE), data = Laktatterskel.meso1)
 
 Laktatterskel.meso1 %>% 
   ggplot(aes(watt, lactate, group = subject)) + 
@@ -90,15 +90,15 @@ Laktatterskel.meso1 %>%
 
 wattdata.meso1 <- data.frame(watt = seq(from = 125, to = 375, by = 0.1))
 
-wattdata.meso1$pred <- predict(modlaktatterskel, newdata = wattdata.meso1)
+wattdata.meso1$pred <- predict(mod_laktatterskel.meso1, newdata = wattdata.meso1)
 
 lactate.meso1 <- wattdata.meso1 %>% 
-  filter(abs(pred - 2) == min(abs(pred - 2)) |
+  filter(abs(pred - 2) == min(abs(pred - 2)) | 
            abs(pred - 4) == min(abs(pred - 4))) %>% 
-  mutate(timepoint = "medso1",
+  mutate(timepoint = "meso1",
          lactate = "2mmol")
 
-lactate.pre[2, 4] <- "4mmol"
+lactate.meso1[2, 4] <- "4mmol"
 
 ```
 
@@ -115,7 +115,7 @@ Laktatterskel.meso2 <- cyclingstudy %>%
                cols = lac.125:lac.375) %>%
   filter(!is.na(lactate))
 
-modlaktatterskel.meso2 <- lm(lactate ~ poly(watt, 3, raw = TRUE), data = Laktatterskel.meso2)
+mod_laktatterskel.meso2 <- lm(lactate ~ poly(watt, 3, raw = TRUE), data = Laktatterskel.meso2)
 
 Laktatterskel.meso2 %>% 
   ggplot(aes(watt, lactate, group = subject)) + 
@@ -124,15 +124,15 @@ Laktatterskel.meso2 %>%
 
 wattdata.meso2 <- data.frame(watt = seq(from = 125, to = 375, by = 0.1))
 
-wattdata.meso2$pred <- predict(modlaktatterskel, newdata = wattdata.meso2)
+wattdata.meso2$pred <- predict(mod_laktatterskel.meso2, newdata = wattdata.meso2)
 
 lactate.meso2 <- wattdata.meso2 %>% 
   filter(abs(pred - 2) == min(abs(pred - 2)) |
            abs(pred - 4) == min(abs(pred - 4))) %>% 
-  mutate(timepoint = "medso1",
+  mutate(timepoint = "meso2",
          lactate = "2mmol")
 
-lactate.pre[2, 4] <- "4mmol" 
+lactate.meso2[2, 4] <- "4mmol" 
 
 ```
 
@@ -147,9 +147,9 @@ Laktatterskel.meso3 <- cyclingstudy %>%
                names_prefix = "lac.",
                names_transform = list(watt = as.numeric),
                cols = lac.125:lac.375) %>%
-  filter(!is.na(lactate))
+  filter(!is.na(lactate)) 
 
-modlaktatterskel.meso3 <- lm(lactate ~ poly(watt, 3, raw = TRUE), data = Laktatterskel.meso3)
+mod_laktatterskel.meso3 <- lm(lactate ~ poly(watt, 3, raw = TRUE), data = Laktatterskel.meso3)
 
 Laktatterskel.meso3 %>% 
   ggplot(aes(watt, lactate, group = subject)) + 
@@ -158,15 +158,15 @@ Laktatterskel.meso3 %>%
 
 wattdata.meso3 <- data.frame(watt = seq(from = 125, to = 375, by = 0.1))
 
-wattdata.meso3$pred <- predict(modlaktatterskel, newdata = wattdata.meso3)
+wattdata.meso3$pred <- predict(mod_laktatterskel.meso3, newdata = wattdata.meso3)
 
 lactate.meso3 <- wattdata.meso3 %>% 
   filter(abs(pred - 2) == min(abs(pred - 2)) |
            abs(pred - 4) == min(abs(pred - 4))) %>% 
-  mutate(timepoint = "medso1",
+  mutate(timepoint = "meso3",
          lactate = "2mmol")
 
-lactate.pre[2, 4] <- "4mmol"
+lactate.meso3[2, 4] <- "4mmol"
 
 ```
 
@@ -204,7 +204,7 @@ gt(full_data_rel)
 #| label: "tbl-lt"
 #| tbl-cap: "**Calculated Lactate Threshold**"
 
-#Tabbelen viser laktatterskel
+#Tabellen viser laktatterskel
 
 cyclingstudy %>% 
   select(subject, group, timepoint, lac.125:lac.375) %>% 
