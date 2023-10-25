@@ -24,8 +24,81 @@ data("hypertrophy")
 
 ```
 
+Nytt forsøk onsdag kveld: 
 
-# Nytt forsøk: 
+```{r}
+
+# Laktatprofil til forsøksperson 10 "Pre" test: 
+
+cyclingstudy %>%
+  select(subject, group, timepoint, lac.125:lac.375) %>%
+  filter(timepoint == "pre", subject == 10) %>%
+  pivot_longer(names_to = "watt", 
+               values_to = "lactate", 
+               names_prefix = "lac.",
+               names_transform = list(watt = as.numeric),
+               cols = lac.225:lac.375) %>%  
+  filter(!is.na(lactate)) %>%
+  ggplot(aes(watt, lactate, group = subject))  + 
+  geom_line(lty = 2) +
+  geom_point(shape = 21, fill = "lightblue", size = 2.5) +
+  geom_hline(yintercept = 4, color = "red") +
+  geom_vline(xintercept = 341.5, color = "blue") +
+  geom_smooth(method = "lm", se = FALSE, formula = y ~ x, color = "#e41a1c") +
+  geom_smooth(method = "lm", se = FALSE, formula = y ~ poly(x, 2), color = "#377eb8") +
+  geom_smooth(method = "lm", se = FALSE, formula = y ~ poly(x, 3), color = "#4daf4a")
+
+
+
+```
+
+```{r}
+
+# Laktatprofil til forsøksperson 10 "Meso1" test: 
+
+cyclingstudy %>%
+  select(subject, group, timepoint, lac.125:lac.375) %>%
+  filter(timepoint == "meso1", subject == 10) %>%
+  pivot_longer(names_to = "watt", 
+               values_to = "lactate", 
+               names_prefix = "lac.",
+               names_transform = list(watt = as.numeric),
+               cols = lac.225:lac.375) %>%  
+  filter(!is.na(lactate)) %>% 
+  ggplot(aes(watt, lactate, group = subject))  + 
+  geom_line(lty = 2) +
+  geom_point(shape = 21, fill = "lightblue", size = 2.5) +
+  geom_hline(yintercept = 4, color = "red") +
+  geom_vline(xintercept = 340, color = "blue") +
+  geom_smooth(method = "lm", se = FALSE, formula = y ~ x, color = "#e41a1c") +
+  geom_smooth(method = "lm", se = FALSE, formula = y ~ poly(x, 2), color = "#377eb8") +
+  geom_smooth(method = "lm", se = FALSE, formula = y ~ poly(x, 3), color = "#4daf4a")
+
+```
+
+```{r}
+
+laktatterskel <- cyclingstudy %>% 
+  select(subject, group, timepoint, lac.125:lac.375) %>%
+  filter(timepoint == "pre", subject == 10) %>%
+  pivot_longer(names_to = "watt", 
+               values_to = "lactate", 
+               names_prefix = "lac.",
+               names_transform = list(watt = as.numeric),
+               cols = lac.225:lac.375) %>%  
+  filter(!is.na(lactate))
+
+m1 <- lm(lactate ~ watt, data = laktatterskel)
+
+m2 <- lm(lactate ~ poly(watt, 2, raw = TRUE), data = laktatterskel)
+
+m3 <- lm(lactate ~ poly(watt, 3, raw = TRUE), data = laktatterskel)
+
+```
+
+
+
+
 
 ## Laktatterskel pre-test
 
