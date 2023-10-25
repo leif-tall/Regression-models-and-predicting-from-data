@@ -25,6 +25,177 @@ data("hypertrophy")
 ```
 
 
+# Nytt forsøk: 
+
+## Laktatterskel pre-test
+
+```{r}
+
+library(tidyverse)
+library(exscidata)
+
+data("Cyclingstudy")
+
+Laktatterskel <- cyclingstudy %>%
+  select(subject, group, timepoint, lac.125:lac.375) %>%
+  filter(timepoint == "pre", subject == 10) %>%
+  pivot_longer(names_to = "watt", 
+               values_to = "lactate", 
+               names_prefix = "lac.",
+               names_transform = list(watt = as.numeric),
+               cols = lac.125:lac.375) %>%
+  filter(!is.na(lactate))
+
+modlaktatterskel <- lm(lactate ~ poly(watt, 3, raw = TRUE), data = Laktatterskel)
+
+Laktatterskel %>% 
+  ggplot(aes(watt, lactate, group = subject)) + 
+  geom_point() + 
+  geom_smooth(method = "lm", se = FALSE, formula = y ~ poly(x, 3), color = "#4daf4a")
+
+wattdata <- data.frame(watt = seq(from = 125, to = 375, by = 0.1))
+
+wattdata$pred <- predict(modlaktatterskel, newdata = wattdata)
+
+lactate.pre <- wattdata %>% 
+  filter(abs(pred - 2) == min(abs(pred - 2)) |
+           abs(pred - 4) == min(abs(pred - 4))) %>% 
+  mutate(timepoint = "pre",
+         lactate = "2mmol")
+
+lactate.pre[2, 4] <- "4mmol"
+
+```
+
+
+## Meso 1 
+```{r}
+
+Laktatterskel.meso1 <- cyclingstudy %>%
+  select(subject, group, timepoint, lac.125:lac.375) %>%
+  filter(timepoint == "meso1", subject == 10) %>%
+  pivot_longer(names_to = "watt", 
+               values_to = "lactate", 
+               names_prefix = "lac.",
+               names_transform = list(watt = as.numeric),
+               cols = lac.125:lac.375) %>%
+  filter(!is.na(lactate))
+
+modlaktatterskel.meso1 <- lm(lactate ~ poly(watt, 3, raw = TRUE), data = Laktatterskel.meso1)
+
+Laktatterskel.meso1 %>% 
+  ggplot(aes(watt, lactate, group = subject)) + 
+  geom_point() + 
+  geom_smooth(method = "lm", se = FALSE, formula = y ~ poly(x, 3), color = "#4daf4a")
+
+wattdata.meso1 <- data.frame(watt = seq(from = 125, to = 375, by = 0.1))
+
+wattdata.meso1$pred <- predict(modlaktatterskel, newdata = wattdata.meso1)
+
+lactate.meso1 <- wattdata.meso1 %>% 
+  filter(abs(pred - 2) == min(abs(pred - 2)) |
+           abs(pred - 4) == min(abs(pred - 4))) %>% 
+  mutate(timepoint = "medso1",
+         lactate = "2mmol")
+
+lactate.pre[2, 4] <- "4mmol"
+
+```
+
+## Meso 2
+
+```{r}
+Laktatterskel.meso2 <- cyclingstudy %>%
+  select(subject, group, timepoint, lac.125:lac.375) %>%
+  filter(timepoint == "meso2", subject == 10) %>%
+  pivot_longer(names_to = "watt", 
+               values_to = "lactate", 
+               names_prefix = "lac.",
+               names_transform = list(watt = as.numeric),
+               cols = lac.125:lac.375) %>%
+  filter(!is.na(lactate))
+
+modlaktatterskel.meso2 <- lm(lactate ~ poly(watt, 3, raw = TRUE), data = Laktatterskel.meso2)
+
+Laktatterskel.meso2 %>% 
+  ggplot(aes(watt, lactate, group = subject)) + 
+  geom_point() + 
+  geom_smooth(method = "lm", se = FALSE, formula = y ~ poly(x, 3), color = "#4daf4a")
+
+wattdata.meso2 <- data.frame(watt = seq(from = 125, to = 375, by = 0.1))
+
+wattdata.meso2$pred <- predict(modlaktatterskel, newdata = wattdata.meso2)
+
+lactate.meso2 <- wattdata.meso2 %>% 
+  filter(abs(pred - 2) == min(abs(pred - 2)) |
+           abs(pred - 4) == min(abs(pred - 4))) %>% 
+  mutate(timepoint = "medso1",
+         lactate = "2mmol")
+
+lactate.pre[2, 4] <- "4mmol" 
+
+```
+
+## Meso 3
+
+```{r}
+Laktatterskel.meso3 <- cyclingstudy %>%
+  select(subject, group, timepoint, lac.125:lac.375) %>%
+  filter(timepoint == "meso3", subject == 10) %>%
+  pivot_longer(names_to = "watt", 
+               values_to = "lactate", 
+               names_prefix = "lac.",
+               names_transform = list(watt = as.numeric),
+               cols = lac.125:lac.375) %>%
+  filter(!is.na(lactate))
+
+modlaktatterskel.meso3 <- lm(lactate ~ poly(watt, 3, raw = TRUE), data = Laktatterskel.meso3)
+
+Laktatterskel.meso3 %>% 
+  ggplot(aes(watt, lactate, group = subject)) + 
+  geom_point() + 
+  geom_smooth(method = "lm", se = FALSE, formula = y ~ poly(x, 3), color = "#4daf4a")
+
+wattdata.meso3 <- data.frame(watt = seq(from = 125, to = 375, by = 0.1))
+
+wattdata.meso3$pred <- predict(modlaktatterskel, newdata = wattdata.meso3)
+
+lactate.meso3 <- wattdata.meso3 %>% 
+  filter(abs(pred - 2) == min(abs(pred - 2)) |
+           abs(pred - 4) == min(abs(pred - 4))) %>% 
+  mutate(timepoint = "medso1",
+         lactate = "2mmol")
+
+lactate.pre[2, 4] <- "4mmol"
+
+```
+
+```{r}
+
+full_data <- lactate.pre %>% 
+  full_join(lactate.meso1) %>% 
+  full_join(lactate.meso2) %>% 
+  full_join(lactate.meso3)
+
+full_data_rel <- full_data %>% 
+  select(-pred) %>% 
+  pivot_wider(names_from = timepoint,
+              values_from = watt) %>% 
+  mutate(diff1 = pre - meso1,
+         diff2 = meso1 - meso2,
+         diff3 = meso2 - meso3) %>% 
+  group_by(lactate) %>% 
+  summarise(s = sd(c(diff1, diff2, diff3)),
+            m = mean(c(pre, meso1, meso2, meso3)),
+            te = s / sqrt(2),
+            cv = 100 * (te / m))
+
+gt(full_data_rel)
+
+```
+
+
+
 ```{r}
 
 #| echo: false
