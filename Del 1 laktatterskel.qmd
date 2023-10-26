@@ -21,7 +21,6 @@ library(gtExtras)
 
 data("cyclingstudy")
 
-
 ```
 
 
