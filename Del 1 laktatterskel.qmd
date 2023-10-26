@@ -48,6 +48,54 @@ cyclingstudy %>%
 
 ```
 
+# Finne skjæringspunkt: 
+
+```{r}
+
+LT <- cyclingstudy %>%
+  select(subject, group, timepoint, lac.125:lac.375) %>%
+  filter(timepoint == "pre", subject == 10) %>%
+  pivot_longer(names_to = "watt", 
+               values_to = "lactate", 
+               names_prefix = "lac.",
+               names_transform = list(watt = as.numeric),
+               cols = lac.225:lac.375) %>%  
+  filter(!is.na(lactate)) %>% 
+  data.frame()
+
+polymodel <- lm(lactate ~ poly(watt, 3, raw = TRUE), data = LT)
+
+delta_mod <- lm(lactate ~ watt, data = filter(LT, watt %in% c(min(watt), max(watt))))
+
+d1 <- coef(polymodel) [2]
+d2 <- coef(polymodel) [3]
+d3 <- coef(polymodel) [4]
+delta <- coef(delta_mod) [2]
+
+poly_threshold <- (-d2 + sqrt((d2^2 - 3 * d3 * (d1 - delta)) )) / (3 * d3)
+
+LT %>% 
+  ggplot(aes(watt, lactate)) + 
+  geom_smooth(method = "lm", formula = y ~ poly(x, 3),
+              se = FALSE,
+              color = "steelblue") +
+  geom_segment(aes(y = pull(filter(LT, watt == min(watt)), lactate), 
+                   yend = pull(filter(LT, watt == max(watt)), lactate),
+                   x = min(watt),
+                   xend = max(watt)),
+                   color = "steelblue",
+                   linewidth = 1) + 
+  geom_segment(aes(y = predict(polymodel, newdata = data.frame(watt = poly_threshold)),
+                   yend = 0,
+                   x = poly_threshold,
+                   xend = poly_threshold),
+               color = "red", lty = 2,
+               aroow = aroow(type = "closed", length = unit(4, "mm"))) +
+  geom_point()
+
+```
+
+
 ```{r}
 
 # Laktatprofil til forsøksperson 10 "Meso1" test: 
