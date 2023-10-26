@@ -24,7 +24,7 @@ data("hypertrophy")
 
 ```
 
-Nytt forsøk onsdag kveld: 
+
 
 ```{r}
 
@@ -45,15 +45,14 @@ cyclingstudy %>%
   geom_hline(yintercept = 4, color = "red") +
   geom_hline(yintercept = 2, color = "red") +
   geom_vline(xintercept = 341.5, color = "blue")
-
 ```
 
-# Finne skjæringspunkt: 
+# Laktatterskel forsøksperson 10, "Pre-Test"
 
 ```{r}
 
 LT <- cyclingstudy %>%
-  select(subject, group, timepoint, lac.125:lac.375) %>%
+  select(subject, group, timepoint, lac.225:lac.375) %>%
   filter(timepoint == "pre", subject == 10) %>%
   pivot_longer(names_to = "watt", 
                values_to = "lactate", 
@@ -90,10 +89,13 @@ LT %>%
                    x = poly_threshold,
                    xend = poly_threshold),
                color = "red", lty = 2,
-               aroow = aroow(type = "closed", length = unit(4, "mm"))) +
+               arrow = arrow(type = "closed", length = unit(4, "mm"))) + 
   geom_point()
 
+# Laktatterskelen til forsøksperson 10 på pre-test tilsvarer 302 Watt
+
 ```
+
 
 
 ```{r}
@@ -114,29 +116,146 @@ cyclingstudy %>%
   geom_point(shape = 21, fill = "lightblue", size = 2.5) +
   geom_hline(yintercept = 4, color = "red") +
   geom_hline(yintercept = 2, color = "red")
-  geom_vline(xintercept = 340, color = "blue")
+  geom_vline(xintercept = 340.4, color = "blue")
 
 
 ```
 
 ```{r}
-
-laktatterskel <- cyclingstudy %>% 
-  select(subject, group, timepoint, lac.125:lac.375) %>%
-  filter(timepoint == "pre", subject == 10) %>%
+LT2 <- cyclingstudy %>%
+  select(subject, group, timepoint, lac.225:lac.375) %>%
+  filter(timepoint == "meso1", subject == 10) %>%
   pivot_longer(names_to = "watt", 
                values_to = "lactate", 
                names_prefix = "lac.",
                names_transform = list(watt = as.numeric),
                cols = lac.225:lac.375) %>%  
-  filter(!is.na(lactate))
+  filter(!is.na(lactate)) %>% 
+  data.frame()
 
-m1 <- lm(lactate ~ watt, data = laktatterskel)
+polymodel <- lm(lactate ~ poly(watt, 3, raw = TRUE), data = LT2)
 
-m2 <- lm(lactate ~ poly(watt, 2, raw = TRUE), data = laktatterskel)
+delta_mod <- lm(lactate ~ watt, data = filter(LT, watt %in% c(min(watt), max(watt))))
 
-m3 <- lm(lactate ~ poly(watt, 3, raw = TRUE), data = laktatterskel)
+d1 <- coef(polymodel) [2]
+d2 <- coef(polymodel) [3]
+d3 <- coef(polymodel) [4]
+delta <- coef(delta_mod) [2]
 
+poly_threshold <- (-d2 + sqrt((d2^2 - 3 * d3 * (d1 - delta)) )) / (3 * d3)
+
+LT2 %>% 
+  ggplot(aes(watt, lactate)) + 
+  geom_smooth(method = "lm", formula = y ~ poly(x, 3),
+              se = FALSE,
+              color = "steelblue") +
+  geom_segment(aes(y = pull(filter(LT, watt == min(watt)), lactate), 
+                   yend = pull(filter(LT, watt == max(watt)), lactate),
+                   x = min(watt),
+                   xend = max(watt)),
+                   color = "steelblue",
+                   linewidth = 1) + 
+  geom_segment(aes(y = predict(polymodel, newdata = data.frame(watt = poly_threshold)),
+                   yend = 0,
+                   x = poly_threshold,
+                   xend = poly_threshold),
+               color = "red", lty = 2,
+               arrow = arrow(type = "closed", length = unit(4, "mm"))) +
+  geom_point() 
+
+
+```
+
+
+```{r}
+# new data data frame
+ndf <- data.frame(watt = seq(from = 225, to = 350, by = 0.1)) # high resolution, we can find the nearest10:th a watt
+
+ndf$predictions <- predict(m3, newdata = ndf)
+
+# Which value of the predictions comes closest to our value of 4 mmol L-1?
+# abs finds the absolute value, makes all values positive, 
+# predictions - 4 givs an exact prediction of 4 mmol the value zero
+# filter the row which has the prediction - 4 equal to the minimal absolut difference between prediction and 4 mmol
+lactate_threshold <- ndf %>%
+  filter(abs(predictions - 4) == min(abs(predictions - 4)))
+```
+
+
+```{r}
+library(tidyverse); library(exscidata); data("cyclingstudy")
+
+# Save a data set of lactate values from participant 10, time-point pre
+dat <- cyclingstudy %>%
+  select(subject, group, timepoint, lac.125:lac.375) %>%
+  pivot_longer(names_to = "watt", 
+               values_to = "lactate", 
+               names_prefix = "lac.", 
+              names_transform = list(watt = as.numeric), 
+              cols = lac.125:lac.375) %>%
+  filter(subject == 10, 
+         timepoint == "pre", 
+         !is.na(lactate)) %>% # Remove NA values
+  print()
+
+# Fit the model 
+model <- lm(lactate ~ watt + I(watt^2) + I(watt^3), data = dat)
+
+
+# Predict lactate values over all observed watt values
+# calculate the smallest distance from the fixed lactate value 
+
+new_data <- data.frame(watt = seq(from = min(dat$watt), to = max(dat$watt), by = 0.1))
+
+new_data$dist <- abs(predict(model, newdata = new_data) - 4)
+
+# Find the smallest value of predicted - fixed lacate value
+new_data %>%
+  filter(dist == min(dist)) # Where the dist value equals the minimum dist value
+
+
+```
+
+```{r}
+lt <- function(data) {
+  
+  # Fit a 3 degree polynomial model
+  m <- lm(lactate ~ watt + I(watt^2) + I(watt^3), data = data)
+  
+  # Store a data frame with exercise intensities
+  new_data <- data.frame(watt = seq(from = min(data$watt), to = max(data$watt), by = 0.01))
+  
+  # Predict using the new data, predicting lactate values at each 
+  new_data$pred <- predict(m, newdata = new_data)
+  
+  # calculate deviation from the lactate value of interest
+  new_data$watt.4mmol <- abs(new_data$pred - 4)
+
+  # Create a results data frame
+  results <- data.frame(watt.4mmol = new_data[which.min(new_data$watt.4mmol),1])
+  
+  # Return the data frame
+  return(results)
+  
+}
+```
+
+```{r}
+data <- cyclingstudy %>%
+  select(subject, group, timepoint, lac.125:lac.375) %>%
+  pivot_longer(names_to = "watt", 
+               values_to = "lactate", 
+               names_prefix = "lac.", 
+              names_transform = list(watt = as.numeric), 
+              cols = lac.125:lac.375) %>%
+  filter(!is.na(lactate), 
+         subject == 10, 
+         timepoint == "pre") %>%
+  print()
+```
+
+```{r}
+lt(data)
 ```
 
 
@@ -364,49 +483,10 @@ cyclingstudy %>%
              meso3_ana = "Meso3") %>% 
   tab_footnote(footnote = "Vis de fire første radene i datasettet") %>% 
   tab_footnote(footnote = "forkortelser: LT, laktatterskel")
-  
-
-  
 
 ```
 
 
-```{r}
-
-library(tidyverse)
-library(exscidata)
-
-cyclingstudy %>% 
-  select(subject, group, timepoint, lac.225:lac.375) %>%
-  filter(timepoint == "pre", subject == 10) %>% 
-  pivot_longer(names_to = "watt",
-               values_to = "lactate",
-               names_prefix = "lac",
-               names_transform = list(watt = as.numeric),
-               cols = lac.225:lac.375) %>%
-  filter(!is.na(lactate)) %>% 
-  ggplot(aes(watt, lactate, group = subject)) +
-  geom_line(lty = 2) + 
-  geom_point(shape = 21, fill = "green", size = 2.5) 
-
-cyclingstudy %>% 
-  select(subject, group, timepoint, lac.225:lac.375) %>%
-  filter(timepoint == "pre", subject == 10) %>% 
-  pivot_longer(names_to = "watt",
-               values_to = "lactate",
-               names_prefix = "lac",
-               names_transform = list(watt = as.numeric),
-               cols = lac.225:lac.375) %>%
-  filter(!is.na(lactate)) %>% 
-  ggplot(aes(watt, lactate, group = subject)) +
-  geom_line(lty = 2) + 
-  geom_point(shape = 21, fill = "green", size = 2.5) +
-  geom_hline(yintercept = 4, color = "red") +
-  geom_vline(xintercept = 341.5, color = "blue")
-
-
-
-```
 
 ```{r}
 library(ggtext)
