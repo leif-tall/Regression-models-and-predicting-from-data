@@ -34,6 +34,20 @@ cmyc_dat <- cmyc_dat |>
 
 ```
 
+```{r} 
+#| fig-cap: Figuren viser et scatterplot av logaritmen til prøvestørrelsen, altså den relative konsentrasjonen av c-myc i prøven, og gjennomsnittlig syklusterskel.
+
+cmyc_dat_ps1 |> 
+  ggplot(aes(log_sample_quan, avg_ct)) + 
+  geom_point() + 
+  geom_abline(intercept = mod_ps1$coefficients[1], 
+              slope = mod_ps1$coefficients[2], 
+              color = "black") + 
+  labs(x = "logaritmen", 
+       y = "gjennomsnittlig ct") + 
+  theme_minimal()
+```
+
 
 ```{r} 
 #| echo: true 
