@@ -5,9 +5,11 @@ editor_options:
   chunk_output_type: console
 ---
 
-# Del 1: Laktatterskel
+Vi valgte å bruke cyclingstudy datasettet med tanke på at vi ikke testet laktatprofiler under reliabilitets-prosjektet vårt. Dette datasettet inneholder data fra 21 forsøkspersoner, der de fleste har gjennomført en laktatprofil på fire ulike tidspunkt: pre, meso1, meso2 og meso3.
 
-Vi valgte å bruke cyclingstudy datasettet med tanke på at vi ikke testet laktatprofiler under reliabilitets-prosjektet vårt. Dette datasettet inneholder data fra 21 forsøkspersoner, der de fleste har gjennomført en laktatprofil på fire ulike tidspunkt: pre, meso1, meso2 og meso3. Vi har valgt å plukke ut forsøkspersonene 1-10, og sett på wattbelastningen på 2 mmol og 4 mmol. Vi har vist hvordan vi har funnet ut laktatprofilen, og laktatterskelen til forsøksperson 10, og gjort dette på alle de utvalgte personene fra studien.   
+Vi har vist hvordan vi har funnet ut laktatprofilen, og laktatterskelen til forsøksperson 10 ved å tilføre en tredjegrads polynomial regresjonsmodell som predikerer laktat ut ifra watt for å fange opp laktatkurven.   
+
+Videre har vi regnet ut effektutvikling (watt) ved blodlaktatverdiene 2- og 4 mmol L$^{-1}$ med metoden "inverse prediction" til de ni utvalgte forsøkspersonene.  
 
 ```{r}
 
@@ -24,7 +26,7 @@ data("cyclingstudy")
 ```
 
 
-## Laktatprofil til forsøksperson 10 "Pre" test:
+## Laktatprofil til forsøksperson 10 "pre-test":
 
 ```{r}
 
@@ -41,45 +43,6 @@ cyclingstudy %>%
   geom_line(lty = 2) +
   geom_point(shape = 21, fill = "lightblue", size = 2.5) 
 ```
-
-
-## Laktatterskel "pre-test"
-
-```{r}
-
-Laktatterskel <- cyclingstudy %>%
-  select(subject, group, timepoint, lac.125:lac.375) %>%
-  filter(timepoint == "pre", subject == 10) %>%
-  pivot_longer(names_to = "watt", 
-               values_to = "lactate", 
-               names_prefix = "lac.",
-               names_transform = list(watt = as.numeric),
-               cols = lac.125:lac.375) %>%
-  filter(!is.na(lactate))
-
-mod_laktatterskel <- lm(lactate ~ poly(watt, 3, raw = TRUE), data = Laktatterskel)
-
-Laktatterskel %>% 
-  ggplot(aes(watt, lactate, group = subject)) + 
-  geom_point() + 
-  geom_smooth(method = "lm", se = FALSE, formula = y ~ poly(x, 3), color = "#4daf4a")
-
-wattdata <- data.frame(watt = seq(from = 125, to = 375, by = 0.1))
-
-wattdata$pred <- predict(mod_laktatterskel, newdata = wattdata) 
-
-lactate.pre <- wattdata %>% 
-  filter(abs(pred - 2) == min(abs(pred - 2)) |
-           abs(pred - 4) == min(abs(pred - 4))) %>% 
-  mutate(timepoint = "pre",
-         lactate = "2mmol")
-
-lactate.pre[2, 4] <- "4mmol" 
-
-
-```
-
-### På "Pre-test" sykler forsøkspersonen på 307 W ved en laktatverdi på 2 mmol, og på 343 W ved en laktatverdi på 4 mmol.
 
 
 ## Laktatterskel "pre-test" 
@@ -131,7 +94,41 @@ LT %>%
 ```
 
 
-## Laktatprofil ved Meso3
+## "Pre-test": Watt ved 2- og 4 mmol L$^{-1}$
+
+```{r}
+
+Laktatterskel <- cyclingstudy %>%
+  select(subject, group, timepoint, lac.125:lac.375) %>%
+  filter(timepoint == "pre", subject == 10) %>%
+  pivot_longer(names_to = "watt", 
+               values_to = "lactate", 
+               names_prefix = "lac.",
+               names_transform = list(watt = as.numeric),
+               cols = lac.125:lac.375) %>%
+  filter(!is.na(lactate))
+
+mod_laktatterskel <- lm(lactate ~ poly(watt, 3, raw = TRUE), data = Laktatterskel)
+
+wattdata <- data.frame(watt = seq(from = 125, to = 375, by = 0.1))
+
+wattdata$pred <- predict(mod_laktatterskel, newdata = wattdata) 
+
+lactate.pre <- wattdata %>% 
+  filter(abs(pred - 2) == min(abs(pred - 2)) |
+           abs(pred - 4) == min(abs(pred - 4))) %>% 
+  mutate(timepoint = "pre",
+         lactate = "2mmol")
+
+lactate.pre[2, 4] <- "4mmol" 
+
+
+```
+
+På "pre-test" sykler forsøkspersonen på 307 W ved en laktatverdi på 2 mmol L$^{-1}$, og på 343 W ved en laktatverdi på 4 mmol L$^{-1}$.
+
+
+## Laktatprofil ved "meso3"
 
 ```{r}
 
@@ -150,7 +147,7 @@ cyclingstudy %>%
 
 ```
 
-## Laktatterskel meso3
+## Laktatterskel "meso3"
 
 ```{r}
 LT2 <- cyclingstudy %>%
@@ -197,7 +194,7 @@ LT2 %>%
 
 ```
 
-## Laktatterskel meso3
+## "Meso3": Watt ved 2- og 4 mmol L$^{-1}$ 
 
 ```{r}
 Laktatterskel.meso3 <- cyclingstudy %>%
@@ -213,11 +210,6 @@ Laktatterskel.meso3 <- cyclingstudy %>%
 
 mod_laktatterskel.meso3 <- lm(lactate ~ poly(watt, 3, raw = TRUE), data = Laktatterskel.meso3)
 
-Laktatterskel.meso3 %>% 
-  ggplot(aes(watt, lactate, group = subject)) + 
-  geom_point() + 
-  geom_smooth(method = "lm", se = FALSE, formula = y ~ poly(x, 3), color = "#4daf4a")
-
 wattdata.meso3 <- data.frame(watt = seq(from = 125, to = 375, by = 0.1))
 
 wattdata.meso3$pred <- predict(mod_laktatterskel.meso3, newdata = wattdata.meso3)
@@ -232,80 +224,33 @@ lactate.meso3[2, 4] <- "4mmol"
 
 ```
 
-### På Meso3 sykler forsøkspersonen på 310 W ved en laktatverdi på 2 mmol, og på 344 W ved en laktatverdi på 4 mmol.
+På "meso3" sykler forsøkspersonen på 310 W ved en laktatverdi på 2 mmol L$^{-1}$, og på 344 W ved en laktatverdi på 4 mmol L$^{-1}$.
 
-# Laktatverdi forsøkspersoner
+## Laktatverdi forsøkspersoner
 
-## Forsøksperson 1: 
-### Pre: 212 W = 2mmol og 255 W = 4 mmol. Meso3: 243 W = 2 mmol og 283 W = 4 mmol 
+Forsøksperson 1: Pre: 212 W = 2mmol og 255 W = 4 mmol. Meso3: 243 W = 2 mmol og 283 W = 4 mmol 
 
-## Forsøksperson 2: 
-### Pre: 217 W = 2 mmol og 260 W = 4 mmol. Meso3: 253 W = 2 mmol og 289 W = 4 mmol 
+Forsøksperson 2: Pre: 217 W = 2 mmol og 260 W = 4 mmol. Meso3: 253 W = 2 mmol og 289 W = 4 mmol 
 
-## Forsøksperson 3: 
-Pre: 272 W = 2 mmol og 314 W = 4 mmol. Meso3: 310 W = 2 mmol og 353 W = 4 mmol.
+Forsøksperson 3: Pre: 272 W = 2 mmol og 314 W = 4 mmol. Meso3: 310 W = 2 mmol og 353 W = 4 mmol.
 
-## Forsøksperson 4: 
-### Pre: 220 W = 2 mmol og 266 W = 4 mmol. Meso3: 224 W = 2 mmol og 263 W = 4 mmol
+Forsøksperson 4: Pre: 220 W = 2 mmol og 266 W = 4 mmol. Meso3: 224 W = 2 mmol og 263 W = 4 mmol
 
-## Forsøksperson 5: 
-### Pre: 236 W = 2 mmol og 309 W = 4 mmol. Meso3: 236 W = 2 mmol og 309 4 mmol
+Forsøksperson 5: Pre: 236 W = 2 mmol og 309 W = 4 mmol. Meso3: 236 W = 2 mmol og 309 4 mmol
 
-## Forsøksperson 6:
-### Pre: 190 W = 2 mmol og 239 W = 4 mmol. Meso3: 227 W = 2 mmol og 257 W = 4 mmol
+Forsøksperson 6: Pre: 190 W = 2 mmol og 239 W = 4 mmol. Meso3: 227 W = 2 mmol og 257 W = 4 mmol
 
-## Forsøksperson 8: 
-### Pre: 242 W = 2 mmol og 274 W = 4 mmol. Meso3: 281 W = 2 mmol og 319 W = 4 mmol
+Forsøksperson 8: Pre: 242 W = 2 mmol og 274 W = 4 mmol. Meso3: 281 W = 2 mmol og 319 W = 4 mmol
 
-Forsøksperson 9: 
-### Pre: 244 W = 2 mmol og 280 W = 4 mmol. Meso3: 253 W = 2 mmol og 291 W = 4 mmol
+Forsøksperson 9: Pre: 244 W = 2 mmol og 280 W = 4 mmol. Meso3: 253 W = 2 mmol og 291 W = 4 mmol
 
 
+## Reliabilitet
 
 ```{r}
 
-LT6.pre <- cyclingstudy %>%
-  select(subject, group, timepoint, lac.125:lac.375) %>%
-  filter(timepoint == "meso3", subject == 7) %>%
-  pivot_longer(names_to = "watt", 
-               values_to = "lactate", 
-               names_prefix = "lac.",
-               names_transform = list(watt = as.numeric),
-               cols = lac.125:lac.375) %>%
-  filter(!is.na(lactate))
-
-mod_laktatterskel <- lm(lactate ~ poly(watt, 3, raw = TRUE), data = LT6.pre)
-
-LT6.pre %>% 
-  ggplot(aes(watt, lactate, group = subject)) + 
-  geom_point() + 
-  geom_smooth(method = "lm", se = FALSE, formula = y ~ poly(x, 3), color = "#4daf4a")
-
-wattdata <- data.frame(watt = seq(from = 125, to = 375, by = 0.1))
-
-wattdata$pred <- predict(mod_laktatterskel, newdata = wattdata) 
-
-LT6.pre <- wattdata %>% 
-  filter(abs(pred - 2) == min(abs(pred - 2)) |
-           abs(pred - 4) == min(abs(pred - 4))) %>% 
-  mutate(timepoint = "meso3",
-         lactate = "2mmol")
-
-LT6.pre[2, 4] <- "4mmol"   
- 
-
-```
-
-
-
-# Reliabilitet
-
-```{r}
-
-rel.lt <- data.frame(trial1 = c(307.1, 343), 
-                           trial2 = c(310.4, 344)) 
-
-# Calculate the typical error. Får berre opp tall i konsoellen 
+rel.lt <- data.frame(trial1 = c(255, 260, 314, 266, 309, 239, 274, 280, 343), 
+                           trial2 = c(283, 289, 353, 236, 309, 257, 319, 291, 344))
 
 rel.lt %>%
   mutate(diff = trial2 - trial1) %>% # Change/difference score
@@ -320,5 +265,4 @@ gt()
 
 ```
 
-
-
+Vi undersøkte også reliabiliteten til laktatveridene 2- og 4 mmol L$^{-1}$. Den relative typiske feilen var lavest på 2 mmol L$^{-1}$ med cv = 4.9, kontra 4 mmol L$^{-1}$ med cv = 5.7.  
