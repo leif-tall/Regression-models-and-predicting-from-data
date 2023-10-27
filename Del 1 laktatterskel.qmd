@@ -265,4 +265,4 @@ gt()
 
 ```
 
-Vi undersøkte også reliabiliteten til laktatveridene 2- og 4 mmol L$^{-1}$. Den relative typiske feilen var lavest på 2 mmol L$^{-1}$ med cv = 4.9, kontra 4 mmol L$^{-1}$ med cv = 5.7.  
+Vi undersøkte også reliabiliteten til laktatveridene 2- og 4 mmol L$^{-1}$. Den relative typiske feilen var lavest på 2 mmol L$^{-1}$ med cv = 4.9, kontra 4 mmol L$^{-1}$ med cv = 5.7. 
