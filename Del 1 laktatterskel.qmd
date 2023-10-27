@@ -7,7 +7,7 @@ editor_options:
 
 # Del 1: Laktatterskel
 
-Vi valgte å bruke cyclingstudy datasettet med tanke på at vi ikke testet laktatprofiler under reliabilitets-prosjektet vårt. Dette datasettet inneholder data fra 21 forsøkspersoner, der de fleste har gjennomført en laktatprofil på fire ulike tidspunkt: pre, meso1, meso2 og meso3. Vi har valgt å plukke ut forsøksperson 10, og sett på laktatprofilen på pre-test og meso3.  
+Vi valgte å bruke cyclingstudy datasettet med tanke på at vi ikke testet laktatprofiler under reliabilitets-prosjektet vårt. Dette datasettet inneholder data fra 21 forsøkspersoner, der de fleste har gjennomført en laktatprofil på fire ulike tidspunkt: pre, meso1, meso2 og meso3. Vi har valgt å plukke ut forsøkspersonene 1-10, og sett på wattbelastningen på 2 mmol og 4 mmol. Vi har vist hvordan vi har funnet ut laktatprofilen, og laktatterskelen til forsøksperson 10, og gjort dette på alle de utvalgte personene fra studien.   
 
 ```{r}
 
@@ -82,7 +82,7 @@ lactate.pre[2, 4] <- "4mmol"
 ### På "Pre-test" sykler forsøkspersonen på 307 W ved en laktatverdi på 2 mmol, og på 343 W ved en laktatverdi på 4 mmol.
 
 
-## Laktatterskel "pre-test"
+## Laktatterskel "pre-test" 
 
 ```{r}
 
@@ -234,6 +234,91 @@ lactate.meso3[2, 4] <- "4mmol"
 
 ### På Meso3 sykler forsøkspersonen på 310 W ved en laktatverdi på 2 mmol, og på 344 W ved en laktatverdi på 4 mmol.
 
+# Laktatverdi forsøkspersoner
+
+## Forsøksperson 1: 
+### Pre: 212 W = 2mmol og 255 W = 4 mmol. Meso3: 243 W = 2 mmol og 283 W = 4 mmol 
+
+## Forsøksperson 2: 
+### Pre: 217 W = 2 mmol og 260 W = 4 mmol. Meso3: 253 W = 2 mmol og 289 W = 4 mmol 
+
+## Forsøksperson 3: 
+Pre: 272 W = 2 mmol og 314 W = 4 mmol. Meso3: 310 W = 2 mmol og 353 W = 4 mmol.
+
+## Forsøksperson 4: 
+### Pre: 220 W = 2 mmol og 266 W = 4 mmol. Meso3: 224 W = 2 mmol og 263 W = 4 mmol
+
+## Forsøksperson 5: 
+### Pre: 236 W = 2 mmol og 309 W = 4 mmol. Meso3: 236 W = 2 mmol og 309 4 mmol
+
+## Forsøksperson 6:
+### Pre: 190 W = 2 mmol og 239 W = 4 mmol. Meso3: 227 W = 2 mmol og 257 W = 4 mmol
+
+## Forsøksperson 8: 
+### Pre: 242 W = 2 mmol og 274 W = 4 mmol. Meso3: 281 W = 2 mmol og 319 W = 4 mmol
+
+Forsøksperson 9: 
+### Pre: 244 W = 2 mmol og 280 W = 4 mmol. Meso3: 253 W = 2 mmol og 291 W = 4 mmol
+
+
+
+```{r}
+
+LT6.pre <- cyclingstudy %>%
+  select(subject, group, timepoint, lac.125:lac.375) %>%
+  filter(timepoint == "meso3", subject == 7) %>%
+  pivot_longer(names_to = "watt", 
+               values_to = "lactate", 
+               names_prefix = "lac.",
+               names_transform = list(watt = as.numeric),
+               cols = lac.125:lac.375) %>%
+  filter(!is.na(lactate))
+
+mod_laktatterskel <- lm(lactate ~ poly(watt, 3, raw = TRUE), data = LT6.pre)
+
+LT6.pre %>% 
+  ggplot(aes(watt, lactate, group = subject)) + 
+  geom_point() + 
+  geom_smooth(method = "lm", se = FALSE, formula = y ~ poly(x, 3), color = "#4daf4a")
+
+wattdata <- data.frame(watt = seq(from = 125, to = 375, by = 0.1))
+
+wattdata$pred <- predict(mod_laktatterskel, newdata = wattdata) 
+
+LT6.pre <- wattdata %>% 
+  filter(abs(pred - 2) == min(abs(pred - 2)) |
+           abs(pred - 4) == min(abs(pred - 4))) %>% 
+  mutate(timepoint = "meso3",
+         lactate = "2mmol")
+
+LT6.pre[2, 4] <- "4mmol"   
+ 
+
+```
+
+
+
+# Reliabilitet
+
+```{r}
+
+rel.lt <- data.frame(trial1 = c(307.1, 343), 
+                           trial2 = c(310.4, 344)) 
+
+# Calculate the typical error. Får berre opp tall i konsoellen 
+
+rel.lt %>%
+  mutate(diff = trial2 - trial1) %>% # Change/difference score
+  summarise(s = sd(diff),  # Summarize to calculate sd, and... 
+            m = mean(c(trial1, trial2)), # mean 
+            mean_diff = mean(diff),
+            te = round(s / sqrt(2), 1), # the typical error.
+            cv = round(100 * (te / m), 1), # Calculate as a percentage of the mean
+            upr.L = mean(diff) + qt(0.975, 4) * s, 
+            lwr.L = mean(diff) - qt(0.975, 4) * s) %>% 
+gt() 
+
+```
 
 
 
