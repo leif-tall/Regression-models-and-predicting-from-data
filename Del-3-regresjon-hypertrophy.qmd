@@ -1,0 +1,85 @@
+---
+title: "del-3-hypertrophy"
+format: pdf
+editor_options: 
+  chunk_output_type: console 
+execute: 
+  echo: false 
+  warning: false 
+bibliography: referanser/referanser.bib 
+---
+
+
+```{r} 
+#| echo: false 
+
+## laste ned pakke som inneholder datasett samt tidyverse
+
+library(exscidata) 
+library(tidyverse) 
+library(gt)
+```
+
+
+## Innledning 
+
+I denne siste delen av arbeidskravet skal vi bruke datasettet "hypertrophy" som er brukt i to studier [haun_2018 & haun_2019]. Basert på to variabler som vi har valgt skal vi lage en lineær modell og presentere denne i en tabell. Deretter diskuterer vi tabellen med spesielt fokus på p-verdien. 
+
+Tverrsnittsarealet til en muskelgruppe er den viktigste faktoren for vår maksimale muskelstyrke [@raastad_styrketrening_2010]. I datasettet vi har brukt er det ikke målt tverrsnitt for alle de involverte muskelgruppene i knebøy. Likevel kan vi forvente å se positiv korrelasjon mellom vastus lateralis tykkelse ved t1 (målt med ultralyd, i cm) og maksimal motstand (kg) på 3 repetisjoner (3RM) i knebøy ved samme tidspunkt. Det blir også hypotesen vår, at vi vil se en korrelasjon, der større tykkelse av vastus lateralis gir høyere 3RM i øvelsen knebøy. 
+
+## Metode 
+Metoden trener ikke så lang beskrivelse, men vi har laget en lineær modell av de nevnte variablene og deretter en tabell. Basert på dette diskuterer vi resultatene videre i diskusjonsdelen. 
+
+## Resultater 
+Nedenfor har vi fått ut en lineær regresjonstabell. Modellen vår viser at for hver enhet (1 cm) økning i tverrsnitt av vastus lateralis så predikerer vi 17.1 kg høyere 3RM i knebøy. 
+```{r} 
+
+data(hypertrophy) 
+
+cor_dat <- hypertrophy |> 
+  select(GROUP, SQUAT_3RM, VL_T1) 
+
+mod_squat <- lm(SQUAT_3RM ~ VL_T1, data = cor_dat)
+  
+summary(mod_squat) 
+
+  
+```
+
+```{r} 
+#| output: false 
+
+plot(mod_squat)
+
+mod_dat <- data.frame(mod_squat$model, 
+                      fitted = mod_squat$fitted.values, 
+                      resid = mod_squat$residuals) 
+
+
+mod_dat |> 
+        ggplot(aes(VL_T1, fitted)) + 
+  geom_point(size = 3, shape = 21, fill = "blue") +
+
+  # Legge til residualer
+  geom_segment(aes(x = VL_T1, xend = VL_T1, 
+                   y = fitted, yend = fitted + resid)) +
+
+  # legge til verdier 
+  geom_point(aes(VL_T1, SQUAT_3RM), 
+             shape = 21, fill = "hotpink", size = 4)
+```
+
+```{r} 
+#| output: false
+
+cor_dat |> 
+ggplot(aes(x = VL_T1, y = SQUAT_3RM)) + 
+  geom_point(na.rm = TRUE) + 
+  geom_abline(slope = mod_squat$coefficients[2], 
+              intercept = mod_squat$coefficients[1])
+
+```
+
+## Diskusjon 
+Estimatet er allerede beskrevet i resultatdelen. Men videre i diskusjonsdelen vil stardfeilen, t-verdien og p-verdien diskuteres kort. Standardfeilen sier oss noe om hvor nøyaktig og pålitelig de estimerte koeffisientene er. 
+
