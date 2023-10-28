@@ -403,7 +403,7 @@ Nedenfor har vi fått ut en lineær regresjonstabell. Modellen vår viser at for
 
 ```{r}
 
-data(hypertrophy) 
+data("hypertrophy") 
 
 cor_dat <- hypertrophy |> 
   select(GROUP, SQUAT_3RM, VL_T1) 
@@ -451,4 +451,4 @@ ggplot(aes(x = VL_T1, y = SQUAT_3RM)) +
 
 ## Diskusjon
 
-Estimatet er allerede beskrevet i resultatdelen. Men videre i diskusjonsdelen vil stardfeilen, t-verdien og p-verdien diskuteres kort. Standardfeilen sier oss noe om hvor nøyaktig og pålitelig de estimerte koeffisientene er.
+Estimatet er allerede beskrevet i resultatdelen. Men videre i diskusjonsdelen vil standardfeilen, t-verdien og p-verdien diskuteres kort. Standardfeilen sier oss noe om hvor nøyaktig og pålitelig de estimerte koeffisientene er. T-verdien er tallet som brukes for å teste ut en nullhypotese. Utregningen er etsimert koeffesienten delt på standardavviket. P-verdien forteller oss hvor stor sannsynligheten er for at en observert forskjell mellom datasett skyldes tilfeldigheter. Dersom nullhypotesen er sann, ønsker man en p-verdi på mindre enn 0.05. I datasettet vårt fant vi at p-verdien var 0.01, noe som indikerer at det er stor sannsynlighet for at den observerte forskjellen skyldes tilfeldigheter. 
