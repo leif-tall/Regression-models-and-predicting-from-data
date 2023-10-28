@@ -11,7 +11,7 @@ bibliography: referanser/referanser.bib
 
 # Del 1: Laktatprofil 
 
-Vi valgte å bruke cyclingstudy datasettet med tanke på at vi ikke testet laktatprofiler under reliabilitets-prosjektet vårt. Dette datasettet inneholder data fra 21 forsøkspersoner, der de fleste har gjennomført en laktatprofil på fire ulike tidspunkt: pre, meso1, meso2 og meso3.
+Vi valgte å bruke cyclingstudy datasettet med tanke på at vi ikke testet laktatprofiler under reliabilitets-prosjektet vårt. Dette datasettet inneholder data fra 21 forsøkspersoner, der de fleste har gjennomført en laktatprofil på fire ulike tidspunkt: pre, meso1, meso2 og meso3. 
 
 Vi har vist hvordan vi har funnet ut laktatprofilen, og laktatterskelen til forsøksperson 10 ved å tilføre en tredjegrads polynomial regresjonsmodell som predikerer laktat ut ifra watt for å fange opp laktatkurven.   
 
