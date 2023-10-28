@@ -1,0 +1,465 @@
+---
+title: "Fullverdig rapport arbeidskrav 2"
+format: html
+editor_options: 
+  chunk_output_type: console
+execute: 
+  echo: false 
+  warning: false 
+bibliography: referanser/referanser.bib
+---
+
+# Del 1: Laktatprofil 
+
+Vi valgte å bruke cyclingstudy datasettet med tanke på at vi ikke testet laktatprofiler under reliabilitets-prosjektet vårt. Dette datasettet inneholder data fra 21 forsøkspersoner, der de fleste har gjennomført en laktatprofil på fire ulike tidspunkt: pre, meso1, meso2 og meso3.
+
+Vi har vist hvordan vi har funnet ut laktatprofilen, og laktatterskelen til forsøksperson 10 ved å tilføre en tredjegrads polynomial regresjonsmodell som predikerer laktat ut ifra watt for å fange opp laktatkurven.   
+
+Videre har vi regnet ut effektutvikling (watt) ved blodlaktatverdiene 2- og 4 mmol L$^{-1}$ med metoden "inverse prediction" til de ni utvalgte forsøkspersonene.  
+
+```{r}
+
+library(tidyverse)
+library(exscidata)
+library(gt)
+library(modelr)
+library(gtExtras)
+
+# Importert datasett
+
+data("cyclingstudy")
+
+```
+
+
+## Laktatprofil til forsøksperson 10 "pre-test":
+
+```{r}
+
+cyclingstudy %>%
+  select(subject, group, timepoint, lac.125:lac.375) %>%
+  filter(timepoint == "pre", subject == 10) %>%
+  pivot_longer(names_to = "watt", 
+               values_to = "lactate", 
+               names_prefix = "lac.",
+               names_transform = list(watt = as.numeric),
+               cols = lac.225:lac.375) %>%  
+  filter(!is.na(lactate)) %>%
+  ggplot(aes(watt, lactate, group = subject))  + 
+  geom_line(lty = 2) +
+  geom_point(shape = 21, fill = "lightblue", size = 2.5) 
+```
+
+
+## Laktatterskel "pre-test" 
+
+```{r}
+
+LT <- cyclingstudy %>%
+  select(subject, group, timepoint, lac.225:lac.375) %>%
+  filter(timepoint == "pre", subject == 10) %>%
+  pivot_longer(names_to = "watt", 
+               values_to = "lactate", 
+               names_prefix = "lac.",
+               names_transform = list(watt = as.numeric),
+               cols = lac.225:lac.375) %>%  
+  filter(!is.na(lactate)) %>% 
+  data.frame()
+
+polymodel <- lm(lactate ~ poly(watt, 3, raw = TRUE), data = LT)
+
+delta_mod <- lm(lactate ~ watt, data = filter(LT, watt %in% c(min(watt), max(watt))))
+
+d1 <- coef(polymodel) [2]
+d2 <- coef(polymodel) [3]
+d3 <- coef(polymodel) [4]
+delta <- coef(delta_mod) [2]
+
+poly_threshold <- (-d2 + sqrt((d2^2 - 3 * d3 * (d1 - delta)) )) / (3 * d3)
+
+LT %>% 
+  ggplot(aes(watt, lactate)) + 
+  geom_smooth(method = "lm", formula = y ~ poly(x, 3),
+              se = FALSE,
+              color = "steelblue") +
+  geom_segment(aes(y = pull(filter(LT, watt == min(watt)), lactate), 
+                   yend = pull(filter(LT, watt == max(watt)), lactate),
+                   x = min(watt),
+                   xend = max(watt)),
+                   color = "steelblue",
+                   linewidth = 1) + 
+  geom_segment(aes(y = predict(polymodel, newdata = data.frame(watt = poly_threshold)),
+                   yend = 0,
+                   x = poly_threshold,
+                   xend = poly_threshold),
+               color = "red", lty = 2,
+               arrow = arrow(type = "closed", length = unit(4, "mm"))) + 
+  geom_point()
+
+
+```
+
+
+## "Pre-test": Watt ved 2- og 4 mmol L$^{-1}$
+
+```{r}
+
+Laktatterskel <- cyclingstudy %>%
+  select(subject, group, timepoint, lac.125:lac.375) %>%
+  filter(timepoint == "pre", subject == 10) %>%
+  pivot_longer(names_to = "watt", 
+               values_to = "lactate", 
+               names_prefix = "lac.",
+               names_transform = list(watt = as.numeric),
+               cols = lac.125:lac.375) %>%
+  filter(!is.na(lactate))
+
+mod_laktatterskel <- lm(lactate ~ poly(watt, 3, raw = TRUE), data = Laktatterskel)
+
+wattdata <- data.frame(watt = seq(from = 125, to = 375, by = 0.1))
+
+wattdata$pred <- predict(mod_laktatterskel, newdata = wattdata) 
+
+lactate.pre <- wattdata %>% 
+  filter(abs(pred - 2) == min(abs(pred - 2)) |
+           abs(pred - 4) == min(abs(pred - 4))) %>% 
+  mutate(timepoint = "pre",
+         lactate = "2mmol")
+
+lactate.pre[2, 4] <- "4mmol" 
+
+
+```
+
+På "pre-test" sykler forsøkspersonen på 307 W ved en laktatverdi på 2 mmol L$^{-1}$, og på 343 W ved en laktatverdi på 4 mmol L$^{-1}$.
+
+
+## Laktatprofil ved "meso3"
+
+```{r}
+
+cyclingstudy %>%
+  select(subject, group, timepoint, lac.125:lac.375) %>%
+  filter(timepoint == "meso3", subject == 10) %>%
+  pivot_longer(names_to = "watt", 
+               values_to = "lactate", 
+               names_prefix = "lac.",
+               names_transform = list(watt = as.numeric),
+               cols = lac.225:lac.375) %>%  
+  filter(!is.na(lactate)) %>% 
+  ggplot(aes(watt, lactate, group = subject))  + 
+  geom_line(lty = 2) +
+  geom_point(shape = 21, fill = "lightblue", size = 2.5) 
+
+```
+
+## Laktatterskel "meso3"
+
+```{r}
+LT2 <- cyclingstudy %>%
+  select(subject, group, timepoint, lac.225:lac.375) %>%
+  filter(timepoint == "meso3", subject == 10) %>%
+  pivot_longer(names_to = "watt", 
+               values_to = "lactate", 
+               names_prefix = "lac.",
+               names_transform = list(watt = as.numeric),
+               cols = lac.225:lac.375) %>%  
+  filter(!is.na(lactate)) %>% 
+  data.frame()
+
+polymodel <- lm(lactate ~ poly(watt, 3, raw = TRUE), data = LT2)
+
+delta_mod <- lm(lactate ~ watt, data = filter(LT, watt %in% c(min(watt), max(watt))))
+
+d1 <- coef(polymodel) [2]
+d2 <- coef(polymodel) [3]
+d3 <- coef(polymodel) [4]
+delta <- coef(delta_mod) [2]
+
+poly_threshold <- (-d2 + sqrt((d2^2 - 3 * d3 * (d1 - delta)) )) / (3 * d3)
+
+LT2 %>% 
+  ggplot(aes(watt, lactate)) + 
+  geom_smooth(method = "lm", formula = y ~ poly(x, 3),
+              se = FALSE,
+              color = "steelblue") +
+  geom_segment(aes(y = pull(filter(LT, watt == min(watt)), lactate), 
+                   yend = pull(filter(LT, watt == max(watt)), lactate),
+                   x = min(watt),
+                   xend = max(watt)),
+                   color = "steelblue",
+                   linewidth = 1) + 
+  geom_segment(aes(y = predict(polymodel, newdata = data.frame(watt = poly_threshold)),
+                   yend = 0,
+                   x = poly_threshold,
+                   xend = poly_threshold),
+               color = "red", lty = 2,
+               arrow = arrow(type = "closed", length = unit(4, "mm"))) +
+  geom_point() 
+
+
+```
+
+## "Meso3": Watt ved 2- og 4 mmol L$^{-1}$ 
+
+```{r}
+Laktatterskel.meso3 <- cyclingstudy %>%
+  select(subject, group, timepoint, lac.125:lac.375) %>%
+  filter(timepoint == "meso3", subject == 10) %>%
+  pivot_longer(names_to = "watt", 
+               values_to = "lactate", 
+               names_prefix = "lac.",
+               names_transform = list(watt = as.numeric),
+               cols = lac.125:lac.375) %>%
+  filter(!is.na(lactate))
+
+
+mod_laktatterskel.meso3 <- lm(lactate ~ poly(watt, 3, raw = TRUE), data = Laktatterskel.meso3)
+
+wattdata.meso3 <- data.frame(watt = seq(from = 125, to = 375, by = 0.1))
+
+wattdata.meso3$pred <- predict(mod_laktatterskel.meso3, newdata = wattdata.meso3)
+
+lactate.meso3 <- wattdata.meso3 %>% 
+  filter(abs(pred - 2) == min(abs(pred - 2)) |
+           abs(pred - 4) == min(abs(pred - 4))) %>% 
+  mutate(timepoint = "meso3",
+         lactate = "2mmol")
+
+lactate.meso3[2, 4] <- "4mmol"
+
+```
+
+På "meso3" sykler forsøkspersonen på 310 W ved en laktatverdi på 2 mmol L$^{-1}$, og på 344 W ved en laktatverdi på 4 mmol L$^{-1}$.
+
+## Laktatverdi forsøkspersoner
+
+Forsøksperson 1: Pre: 212 W = 2mmol og 255 W = 4 mmol. Meso3: 243 W = 2 mmol og 283 W = 4 mmol 
+
+Forsøksperson 2: Pre: 217 W = 2 mmol og 260 W = 4 mmol. Meso3: 253 W = 2 mmol og 289 W = 4 mmol 
+
+Forsøksperson 3: Pre: 272 W = 2 mmol og 314 W = 4 mmol. Meso3: 310 W = 2 mmol og 353 W = 4 mmol.
+
+Forsøksperson 4: Pre: 220 W = 2 mmol og 266 W = 4 mmol. Meso3: 224 W = 2 mmol og 263 W = 4 mmol
+
+Forsøksperson 5: Pre: 236 W = 2 mmol og 309 W = 4 mmol. Meso3: 236 W = 2 mmol og 309 4 mmol
+
+Forsøksperson 6: Pre: 190 W = 2 mmol og 239 W = 4 mmol. Meso3: 227 W = 2 mmol og 257 W = 4 mmol
+
+Forsøksperson 8: Pre: 242 W = 2 mmol og 274 W = 4 mmol. Meso3: 281 W = 2 mmol og 319 W = 4 mmol
+
+Forsøksperson 9: Pre: 244 W = 2 mmol og 280 W = 4 mmol. Meso3: 253 W = 2 mmol og 291 W = 4 mmol
+
+
+## Reliabilitet
+
+```{r}
+
+rel.lt <- data.frame(trial1 = c(255, 260, 314, 266, 309, 239, 274, 280, 343), 
+                           trial2 = c(283, 289, 353, 236, 309, 257, 319, 291, 344))
+
+rel.lt %>%
+  mutate(diff = trial2 - trial1) %>% # Change/difference score
+  summarise(s = sd(diff),  # Summarize to calculate sd, and... 
+            m = mean(c(trial1, trial2)), # mean 
+            mean_diff = mean(diff),
+            te = round(s / sqrt(2), 1), # the typical error.
+            cv = round(100 * (te / m), 1), # Calculate as a percentage of the mean
+            upr.L = mean(diff) + qt(0.975, 4) * s, 
+            lwr.L = mean(diff) - qt(0.975, 4) * s) %>% 
+gt() 
+
+```
+
+Vi undersøkte også reliabiliteten til laktatveridene 2- og 4 mmol L$^{-1}$. Den relative typiske feilen var lavest på 2 mmol L$^{-1}$ med cv = 4.9, kontra 4 mmol L$^{-1}$ med cv = 5.7. 
+
+# Del 2: Predicting sizes of DNA fragments, or slopes of a qPCR calibration curve 
+
+## Innledning - beskrivelse av datasett 
+
+Prøvene er hentet fra ferdig ekstrahert cDNA, som kommer fra RNA ifra muskelbiopsier til forsøkspersoner ved en styrketreningstudie ved Høgskolen i Innlandet. W0 er fra en prøve fra en forsøksperson før en treningsperiode, mens W2 har opprinnelse fra prøve tatt etter treningsperioden. 
+
+MHC-I, MHC-IIA og MHC-IIX er molekylet brukes til å lese av primerene på de aktuelle genene slik at vi får amplifisert de genene vi ønsker å kopiere. Deretter får vi målt konsentrasjonen av de aktuelle isoformene av mhc-genet. Dette kan i en studie brukes til å sammenligne muskelfibertypeoverganger. Dersom vi hadde hatt data fra flere forsøkspersoner kunne vi eksempelvis undersøkt om de som f.eks. har trent styrketrening har fått fibertypeoverganger fra type IIX til type IIA. 
+
+C-myc er en annen primer som vi har brukt for å få amplifisert dette genet fra PS1 og PS2 som begge er prøver med miksede cDNA fra flere personer og ved ulike tidspunkt. Alle disse med c-myc som primer fungerer som kontroller. Dette har vi fortynnet 6 ganger og kjørt 3 replikater av samme fortynning. Det er disse kontrollene vi er interessert i for å sjekke om metoden vår har god validitet. I denne delen av arbeidskravet ønsker vi å regne ut reaksjonseffektiviteten til PCR-reaksjonene ved hjelp av det som fungerer som kontrollgenet, c-myc. 
+
+
+Laste ned datasett: 
+
+```{r} 
+#| echo: false
+#| warning: false
+
+library(readxl) 
+library(tidyverse)
+
+cmyc_dat <- read_excel("Data/kontroll-cmyc-qpcr-gr3.xlsx") 
+
+cmyc_dat <- cmyc_dat |> 
+  mutate(ct1 = as.numeric(ct1), 
+         ct2 = as.numeric(ct2), 
+         ct3 = as.numeric(ct3)) 
+
+```
+
+```{r} 
+#| fig-cap: Figuren viser et scatterplot av logaritmen til prøvestørrelsen, altså den relative konsentrasjonen av c-myc i prøven, og gjennomsnittlig syklusterskel.
+
+cmyc_dat_ps1 |> 
+  ggplot(aes(log_sample_quan, avg_ct)) + 
+  geom_point() + 
+  geom_abline(intercept = mod_ps1$coefficients[1], 
+              slope = mod_ps1$coefficients[2], 
+              color = "black") + 
+  labs(x = "logaritmen", 
+       y = "gjennomsnittlig ct") + 
+  theme_minimal()
+```
+
+
+```{r} 
+#| echo: true 
+
+## ønsker et datasett med bare verdiene for de som inneholder prøve ps1
+cmyc_dat_ps1 <- cmyc_dat |> 
+                  filter(grepl("-1$", target_name))
+
+## lage en lineær modell med kontrollene med gjennomsnittlig ct på x-akse og 10-logaritmen til den relative mengden c-myc i de 6 ulike konsentrasjonene som hver har 3 duplikater
+mod_ps1 <- lm(avg_ct ~ log_sample_quan, data = cmyc_dat_ps1) 
+
+## regne ut reaksjonseffektiviteten for kontrollene med prøve ps1
+e_ps1 <- (10^(-1/mod_ps1$coefficients[2])-1)*100 
+e_ps1  ## vil se resultatet 
+
+```
+
+For de kontrollrørene som inneholdt prøve "PS1" så var reaksjonseffektiviteten 71.3 %. 
+
+```{r} 
+
+## ønsker å undersøke om reaksjonseffektiviteten er lik for PS2 
+
+cmyc_dat_ps2 <- cmyc_dat |> 
+                 filter(grepl("-2$", target_name)) 
+
+mod_ps2 <- lm(avg_ct ~ log_sample_quan, data = cmyc_dat_ps2) 
+
+e_ps2 <- (10^(-1/mod_ps2$coefficients[2])-1)*100 
+e_ps2
+
+```
+
+For rørene med PS2 estimerer vi derimot reaksjonseffektiviteten til å være 250.6 %. For å kunne bruke prøvene videre i analyser ved hjelp av delta-delta-ct-metoden for å kunne si om prosentvis endringer i genuttrykk av myosin tungkjede isoformene etter en treningsintervensjon er det viktig at noen antagelser er møtt. En av disse har vi sjekket her ved at det burde være nærme 100 % reaksjonseffektivitet for PCR-reaksjonene, og våre resultater er ikke innenfor 0.9-1.1. I tillegg er det en annen antagelse om at effektiviteten av målgenet er lik kontrollgenet [livak2014]. Samtidig burde de to ulike kontrollene vi gjorde være like. 
+
+Hvorfor kan det være slik at vi ikke ser det samme resultatet?
+
+At vi ikke er nærmere det som er å forvente kan ha flere årsaker. Lite erfaring med pippetering, samt at ulike personer har pippetert kan tenkes å gi en større unøyaktig. Det var ikke samme person som pippeterte kontrollene med PS1 som pippeterte de med PS2. Denne usikkerheten gir heller ikke mulighet for at eventuelle feil i pippetering kan bli systematisk like mye feil på begge prøvene. 
+
+Resultatene fra PS1-kontrollene var ikke like langt unna 100 %. Sammenligner vi variasjonen i ct-verdiene kan vi med hvordan ct-verdiene forklare hvorfor estimeringen er lengre unna for PS2. 
+
+```{r} 
+#| output: true 
+#| echo: false
+
+cmyc_dat_ps1 |> 
+  rowwise() |> 
+  mutate(sd = sd(c(ct1, ct2, ct3), na.rm = TRUE), 
+         cv = sd/avg_ct) |> 
+  select(target_name, avg_ct, sd, cv) |> 
+  ungroup() |> 
+  print() 
+
+
+cmyc_dat_ps2 |> 
+  rowwise() |> 
+  mutate(sd = sd(c(ct1, ct2, ct3), na.rm = TRUE), 
+         cv = sd/avg_ct) |> 
+  select(target_name, avg_ct, sd, cv) |> 
+  ungroup() |> 
+  print() 
+
+```
+
+
+Definere ct i starten av teksten og pcr. 
+
+# Del 3: Intepreting a regression tabl
+
+
+```{r} 
+#| echo: false 
+
+## laste ned pakke som inneholder datasett samt tidyverse
+
+library(exscidata) 
+library(tidyverse) 
+library(gt)
+```
+
+
+## Innledning 
+
+I denne siste delen av arbeidskravet skal vi bruke datasettet "hypertrophy" som er brukt i to studier [haun_2018 & haun_2019]. Basert på to variabler som vi har valgt skal vi lage en lineær modell og presentere denne i en tabell. Deretter diskuterer vi tabellen med spesielt fokus på p-verdien. 
+
+Tverrsnittsarealet til en muskelgruppe er den viktigste faktoren for vår maksimale muskelstyrke [@raastad_styrketrening_2010]. I datasettet vi har brukt er det ikke målt tverrsnitt for alle de involverte muskelgruppene i knebøy. Likevel kan vi forvente å se positiv korrelasjon mellom vastus lateralis tykkelse ved t1 (målt med ultralyd, i cm) og maksimal motstand (kg) på 3 repetisjoner (3RM) i knebøy ved samme tidspunkt. Det blir også hypotesen vår, at vi vil se en korrelasjon, der større tykkelse av vastus lateralis gir høyere 3RM i øvelsen knebøy. 
+
+## Metode 
+Metoden trener ikke så lang beskrivelse, men vi har laget en lineær modell av de nevnte variablene og deretter en tabell. Basert på dette diskuterer vi resultatene videre i diskusjonsdelen. 
+
+## Resultater 
+Nedenfor har vi fått ut en lineær regresjonstabell. Modellen vår viser at for hver enhet (1 cm) økning i tverrsnitt av vastus lateralis så predikerer vi 17.1 kg høyere 3RM i knebøy. 
+```{r} 
+
+data(hypertrophy) 
+
+cor_dat <- hypertrophy |> 
+  select(GROUP, SQUAT_3RM, VL_T1) 
+
+mod_squat <- lm(SQUAT_3RM ~ VL_T1, data = cor_dat)
+  
+summary(mod_squat) 
+
+  
+```
+
+```{r} 
+#| output: false 
+
+plot(mod_squat)
+
+mod_dat <- data.frame(mod_squat$model, 
+                      fitted = mod_squat$fitted.values, 
+                      resid = mod_squat$residuals) 
+
+
+mod_dat |> 
+        ggplot(aes(VL_T1, fitted)) + 
+  geom_point(size = 3, shape = 21, fill = "blue") +
+
+  # Legge til residualer
+  geom_segment(aes(x = VL_T1, xend = VL_T1, 
+                   y = fitted, yend = fitted + resid)) +
+
+  # legge til verdier 
+  geom_point(aes(VL_T1, SQUAT_3RM), 
+             shape = 21, fill = "hotpink", size = 4)
+```
+
+```{r} 
+#| output: false
+
+cor_dat |> 
+ggplot(aes(x = VL_T1, y = SQUAT_3RM)) + 
+  geom_point(na.rm = TRUE) + 
+  geom_abline(slope = mod_squat$coefficients[2], 
+              intercept = mod_squat$coefficients[1])
+
+```
+
+## Diskusjon 
+Estimatet er allerede beskrevet i resultatdelen. Men videre i diskusjonsdelen vil stardfeilen, t-verdien og p-verdien diskuteres kort. Standardfeilen sier oss noe om hvor nøyaktig og pålitelig de estimerte koeffisientene er. 
+
+
+
+
+
