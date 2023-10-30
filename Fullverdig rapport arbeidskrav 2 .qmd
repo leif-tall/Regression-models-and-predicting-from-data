@@ -17,6 +17,15 @@ Vi har vist hvordan vi har funnet ut laktatprofilen, og laktatterskelen til fors
 
 Videre har vi regnet ut effektutvikling (watt) ved blodlaktatverdiene 2- og 4 mmol L$^{-1}$ med metoden "inverse prediction" til de ni utvalgte forsøkspersonene.
 
+## Laktatterskler 
+
+Grunnen til at man måler laktaten i blodet er flere, men hovedgrunnene er blant annet at det: fungerer som en indikator for treningsadaptasjon, det korrelerer med utholdenhetsprestasjon og det kan indikere optimale treningsstimuli [@tanner2013]. 
+
+Vi skiller gjerne mellom to tydelige terskler i blodlaktatrespons på gradvis økende trening som kan brukes som generelle begreper. Den første terskelen, heretter kalt LT1, er assosiert med den første treningsintensiteten der det er en vedvarende økning i blodlaktat over hvilenivå. Dette punktet er forskere enige om at tilsvarer en blodlaktat på mindre enn 2 mmol L$^{-1}$. Den andre terskelen er assosiert med en veldig rask økning i blodlaktatkonsentrasjon. Punktet representerer en overgang fra oksidativ til delvis anaerob energiomsetning under gradvis økende treningsintensitet, og punktet refererer til den øvre grensen for blodlaktatkonsentrasjonen som indikerer en likevekt mellom laktatproduksjon og laktateliminering. Terskelen er assosiert med blodlaktat på mellom 2,5 og 5,5 mmol L$^{-1}$. Heretter blir denne terskelen kalt LT2. Grunnen til at de to fiktive laktattersklene er satt til 2- og 4 mmol er nettopp fordi LT1 indikerer en belastning (watt) der produksjonen av blodlaktat er lav, og ikke vil øke, mens LT2 indikerer en belastning (watt) der blodlaktaten vil stige. Ved å finne LT2 belastningen, som vi har satt til 4 mmol L$^{-1}$, indikerer man en treningsintensitet som personen kan opprettholde over tid uten kontinuerlig akkumulering av blodlaktat. Treningsintensitet over denne belastnignen vil føre til en opphopning av laktat, og personen vil ikke klare å holde denne belastningen over lang tid [@tanner2013]. 
+
+Ved å finne disse to tersklene har man mulighet til å styre treningen ved å se på hvilken belastning (watt) personen må sykle på for at han/hun ikke vil vil få en opphopning av laktat, eller hvilken belastning som kan brukes for å akkurat klare å holde en viss intensitet uten at det skjer en altfor stor opphopning av laktat.
+
+
 ```{r}
 
 library(tidyverse)
