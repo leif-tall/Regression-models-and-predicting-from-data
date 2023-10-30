@@ -2,7 +2,7 @@
 title: "del-3-hypertrophy"
 format: pdf
 editor_options: 
-  chunk_output_type: console 
+  chunk_output_type: console
 execute: 
   echo: false 
   warning: false 

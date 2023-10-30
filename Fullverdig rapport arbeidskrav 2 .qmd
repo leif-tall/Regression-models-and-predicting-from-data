@@ -278,8 +278,6 @@ MHC-I, MHC-IIA og MHC-IIX er molekylet brukes til å lese av primerene på de ak
 
 C-myc er en annen primer som vi har brukt for å få amplifisert dette genet fra PS1 og PS2 som begge er prøver med miksede cDNA fra flere personer og ved ulike tidspunkt. Alle disse med c-myc som primer fungerer som kontroller. Dette har vi fortynnet 6 ganger og kjørt 3 replikater av samme fortynning. Det er disse kontrollene vi er interessert i for å sjekke om metoden vår har god validitet. I denne delen av arbeidskravet ønsker vi å regne ut reaksjonseffektiviteten til PCR-reaksjonene ved hjelp av det som fungerer som kontrollgenet, c-myc.
 
-Laste ned datasett:
-
 ```{r}
 #| echo: false
 #| warning: false
@@ -293,6 +291,39 @@ cmyc_dat <- cmyc_dat |>
   mutate(ct1 = as.numeric(ct1), 
          ct2 = as.numeric(ct2), 
          ct3 = as.numeric(ct3)) 
+
+```
+
+```{r} 
+#| output: false 
+
+## ønsker et datasett med bare verdiene for de som inneholder prøve ps1
+cmyc_dat_ps1 <- cmyc_dat |> 
+                  filter(grepl("-1$", target_name))
+
+## lage en lineær modell med kontrollene med gjennomsnittlig ct på x-akse og 10-logaritmen til den relative mengden c-myc i de 6 ulike konsentrasjonene som hver har 3 duplikater
+mod_ps1 <- lm(avg_ct ~ log_sample_quan, data = cmyc_dat_ps1) 
+
+## regne ut reaksjonseffektiviteten for kontrollene med prøve ps1
+e_ps1 <- (10^(-1/mod_ps1$coefficients[2])-1)*100 
+e_ps1  ## vil se resultatet 
+
+```
+
+For de kontrollrørene som inneholdt prøve "PS1" så var reaksjonseffektiviteten 71.3 %.
+
+```{r} 
+#| output: false
+
+## ønsker å undersøke om reaksjonseffektiviteten er lik for PS2 
+
+cmyc_dat_ps2 <- cmyc_dat |> 
+                 filter(grepl("-2$", target_name)) 
+
+mod_ps2 <- lm(avg_ct ~ log_sample_quan, data = cmyc_dat_ps2) 
+
+e_ps2 <- (10^(-1/mod_ps2$coefficients[2])-1)*100 
+e_ps2
 
 ```
 
@@ -310,41 +341,7 @@ cmyc_dat_ps1 |>
   theme_minimal()
 ```
 
-```{r}
-#| echo: true 
-
-## ønsker et datasett med bare verdiene for de som inneholder prøve ps1
-cmyc_dat_ps1 <- cmyc_dat |> 
-                  filter(grepl("-1$", target_name))
-
-## lage en lineær modell med kontrollene med gjennomsnittlig ct på x-akse og 10-logaritmen til den relative mengden c-myc i de 6 ulike konsentrasjonene som hver har 3 duplikater
-mod_ps1 <- lm(avg_ct ~ log_sample_quan, data = cmyc_dat_ps1) 
-
-## regne ut reaksjonseffektiviteten for kontrollene med prøve ps1
-e_ps1 <- (10^(-1/mod_ps1$coefficients[2])-1)*100 
-e_ps1  ## vil se resultatet 
-
-```
-
-For de kontrollrørene som inneholdt prøve "PS1" så var reaksjonseffektiviteten 71.3 %.
-
-```{r}
-
-## ønsker å undersøke om reaksjonseffektiviteten er lik for PS2 
-
-cmyc_dat_ps2 <- cmyc_dat |> 
-                 filter(grepl("-2$", target_name)) 
-
-mod_ps2 <- lm(avg_ct ~ log_sample_quan, data = cmyc_dat_ps2) 
-
-e_ps2 <- (10^(-1/mod_ps2$coefficients[2])-1)*100 
-e_ps2
-
-```
-
-For rørene med PS2 estimerer vi derimot reaksjonseffektiviteten til å være 250.6 %. For å kunne bruke prøvene videre i analyser ved hjelp av delta-delta-ct-metoden for å kunne si om prosentvis endringer i genuttrykk av myosin tungkjede isoformene etter en treningsintervensjon er det viktig at noen antagelser er møtt. En av disse har vi sjekket her ved at det burde være nærme 100 % reaksjonseffektivitet for PCR-reaksjonene, og våre resultater er ikke innenfor 0.9-1.1. I tillegg er det en annen antagelse om at effektiviteten av målgenet er lik kontrollgenet \[livak2014\]. Samtidig burde de to ulike kontrollene vi gjorde være like.
-
-Hvorfor kan det være slik at vi ikke ser det samme resultatet?
+For rørene med PS2 estimerer vi derimot reaksjonseffektiviteten til å være 250.6 %. For å kunne bruke prøvene videre i analyser ved hjelp av delta-delta-ct-metoden for å kunne si om prosentvis endringer i genuttrykk av myosin tungkjede isoformene etter en treningsintervensjon er det viktig at noen antagelser er møtt. En av disse har vi sjekket her ved at det burde være nærme 100 % reaksjonseffektivitet for PCR-reaksjonene, og våre resultater er ikke innenfor 0.9-1.1. I tillegg er det en annen antagelse om at effektiviteten av målgenet er lik kontrollgenet [livak2014]. Samtidig burde de to ulike kontrollene vi gjorde være like.
 
 At vi ikke er nærmere det som er å forvente kan ha flere årsaker. Lite erfaring med pippetering, samt at ulike personer har pippetert kan tenkes å gi en større unøyaktig. Det var ikke samme person som pippeterte kontrollene med PS1 som pippeterte de med PS2. Denne usikkerheten gir heller ikke mulighet for at eventuelle feil i pippetering kan bli systematisk like mye feil på begge prøvene.
 
@@ -373,9 +370,7 @@ cmyc_dat_ps2 |>
 
 ```
 
-Definere ct i starten av teksten og pcr.
-
-# Del 3: Intepreting a regression tabl
+# Del 3: Intepreting a regression table
 
 ```{r}
 #| echo: false 
@@ -389,7 +384,7 @@ library(gt)
 
 ## Innledning
 
-I denne siste delen av arbeidskravet skal vi bruke datasettet "hypertrophy" som er brukt i to studier \[haun_2018 & haun_2019\]. Basert på to variabler som vi har valgt skal vi lage en lineær modell og presentere denne i en tabell. Deretter diskuterer vi tabellen med spesielt fokus på p-verdien.
+I denne siste delen av arbeidskravet skal vi bruke datasettet "hypertrophy" som er brukt i to studier [haun_2018 & haun_2019]. Basert på to variabler som vi har valgt skal vi lage en lineær modell og presentere denne i en tabell. Deretter diskuterer vi tabellen med spesielt fokus på p-verdien.
 
 Tverrsnittsarealet til en muskelgruppe er den viktigste faktoren for vår maksimale muskelstyrke [@raastad_styrketrening_2010]. I datasettet vi har brukt er det ikke målt tverrsnitt for alle de involverte muskelgruppene i knebøy. Likevel kan vi forvente å se positiv korrelasjon mellom vastus lateralis tykkelse ved t1 (målt med ultralyd, i cm) og maksimal motstand (kg) på 3 repetisjoner (3RM) i knebøy ved samme tidspunkt. Det blir også hypotesen vår, at vi vil se en korrelasjon, der større tykkelse av vastus lateralis gir høyere 3RM i øvelsen knebøy.
 
