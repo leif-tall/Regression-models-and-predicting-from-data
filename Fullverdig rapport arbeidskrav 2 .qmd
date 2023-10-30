@@ -58,6 +58,8 @@ cyclingstudy %>%
   geom_point(shape = 21, fill = "lightblue", size = 2.5) 
 ```
 
+Denne figuren viser laktatprofilen til subject 10. Figuren viser at det har blitt tatt laktatmåling på 225 til 350 watt, med 25 w økning mellom hver måling. Ut ifra disse målingene er det estimert en laktatkurve.
+
 ## Laktatterskel "pre-test"
 
 ```{r}
@@ -105,6 +107,8 @@ LT %>%
 
 
 ```
+
+I denne figuren er det brukt en tredjegrads polynommodell for å beregne laktaterskelen
 
 ## "Pre-test": Watt ved 2- og 4 mmol L$^{-1}$
 
