@@ -264,7 +264,8 @@ Forsøksperson 9: Pre: 244 W = 2 mmol og 280 W = 4 mmol. Meso3: 253 W = 2 mmol o
 library(tidyverse)
 library(readxl)
 
-
+Datasettlaktatverdi %>% 
+  
 
 
 
