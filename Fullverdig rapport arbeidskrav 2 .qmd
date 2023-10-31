@@ -17,14 +17,13 @@ Vi har vist hvordan vi har funnet ut laktatprofilen, og laktatterskelen til fors
 
 Videre har vi regnet ut effektutvikling (watt) ved blodlaktatverdiene 2- og 4 mmol L$^{-1}$ med metoden "inverse prediction" til de ni utvalgte forsøkspersonene.
 
-## Laktatterskler 
+## Laktatterskler
 
-Grunnen til at man måler laktaten i blodet er flere, men hovedgrunnene er blant annet at det: fungerer som en indikator for treningsadaptasjon, det korrelerer med utholdenhetsprestasjon og det kan indikere optimale treningsstimuli [@tanner2013]. 
+Grunnen til at man måler laktaten i blodet er flere, men hovedgrunnene er blant annet at det: fungerer som en indikator for treningsadaptasjon, det korrelerer med utholdenhetsprestasjon og det kan indikere optimale treningsstimuli [@tanner2013].
 
-Vi skiller gjerne mellom to tydelige terskler i blodlaktatrespons på gradvis økende trening som kan brukes som generelle begreper. Den første terskelen, heretter kalt LT1, er assosiert med den første treningsintensiteten der det er en vedvarende økning i blodlaktat over hvilenivå. Dette punktet er forskere enige om at tilsvarer en blodlaktat på mindre enn 2 mmol L$^{-1}$. Den andre terskelen er assosiert med en veldig rask økning i blodlaktatkonsentrasjon. Punktet representerer en overgang fra oksidativ til delvis anaerob energiomsetning under gradvis økende treningsintensitet, og punktet refererer til den øvre grensen for blodlaktatkonsentrasjonen som indikerer en likevekt mellom laktatproduksjon og laktateliminering. Terskelen er assosiert med blodlaktat på mellom 2,5 og 5,5 mmol L$^{-1}$. Heretter blir denne terskelen kalt LT2. Grunnen til at de to fiktive laktattersklene er satt til 2- og 4 mmol er nettopp fordi LT1 indikerer en belastning (watt) der produksjonen av blodlaktat er lav, og ikke vil øke, mens LT2 indikerer en belastning (watt) der blodlaktaten vil stige. Ved å finne LT2 belastningen, som vi har satt til 4 mmol L$^{-1}$, indikerer man en treningsintensitet som personen kan opprettholde over tid uten kontinuerlig akkumulering av blodlaktat. Treningsintensitet over denne belastnignen vil føre til en opphopning av laktat, og personen vil ikke klare å holde denne belastningen over lang tid [@tanner2013]. 
+Vi skiller gjerne mellom to tydelige terskler i blodlaktatrespons på gradvis økende trening som kan brukes som generelle begreper. Den første terskelen, heretter kalt LT1, er assosiert med den første treningsintensiteten der det er en vedvarende økning i blodlaktat over hvilenivå. Dette punktet er forskere enige om at tilsvarer en blodlaktat på mindre enn 2 mmol L$^{-1}$. Den andre terskelen er assosiert med en veldig rask økning i blodlaktatkonsentrasjon. Punktet representerer en overgang fra oksidativ til delvis anaerob energiomsetning under gradvis økende treningsintensitet, og punktet refererer til den øvre grensen for blodlaktatkonsentrasjonen som indikerer en likevekt mellom laktatproduksjon og laktateliminering. Terskelen er assosiert med blodlaktat på mellom 2,5 og 5,5 mmol L$^{-1}$. Heretter blir denne terskelen kalt LT2. Grunnen til at de to fiktive laktattersklene er satt til 2- og 4 mmol er nettopp fordi LT1 indikerer en belastning (watt) der produksjonen av blodlaktat er lav, og ikke vil øke, mens LT2 indikerer en belastning (watt) der blodlaktaten vil stige. Ved å finne LT2 belastningen, som vi har satt til 4 mmol L$^{-1}$, indikerer man en treningsintensitet som personen kan opprettholde over tid uten kontinuerlig akkumulering av blodlaktat. Treningsintensitet over denne belastnignen vil føre til en opphopning av laktat, og personen vil ikke klare å holde denne belastningen over lang tid [@tanner2013].
 
 Ved å finne disse to tersklene har man mulighet til å styre treningen ved å se på hvilken belastning (watt) personen må sykle på for at han/hun ikke vil vil få en opphopning av laktat, eller hvilken belastning som kan brukes for å akkurat klare å holde en viss intensitet uten at det skjer en altfor stor opphopning av laktat.
-
 
 ```{r}
 
@@ -262,16 +261,70 @@ Forsøksperson 9: Pre: 244 W = 2 mmol og 280 W = 4 mmol. Meso3: 253 W = 2 mmol o
 ```{r}
 
 library(tidyverse)
+library(exscidata)
+library(ggplot2)
+library(gt)
+library(gt)
+library(exscidata)
 library(readxl)
+library(ggplot2)
+library(tidyverse)
 
-Datasettlaktatverdi %>% 
+ datasettlaktatverdier <- read_excel("data/Datasettlaktatverdi.xlsx") 
+
+datasettlaktatverdier %>%
+  select (Subjekt, Timepoint, Watt, Lactate)%>%
+  group_by(Subjekt)%>%
+  gt(caption = "Alle testdata for kvar enkelt person")%>%
+  fmt_number(columns = Watt:Lactate,
+             decimals=1)
   
+  
+  
+  cols_label(timepoint = "Tidspunkt",
+             hr.max = md("HR<sub>max</sub><br><small>"),
+             w.max = md("W<sub>max</sub><br><small>"),
+             vo2.rel.max = md("VO<sub>2max</sub><br><small>(ml min<sup>-1</sup>)"),
+             rer.max = md("RER"),
+             ve.max = md("VE<sub></sub><br><small>(l/min<sup>-1</sup>)"),
+             bf.max = md("BF"))%>%
+  tab_header(title = "VO2maks test")
 
 
 
 
 ```
 
+```{r}
+datasettlaktatverdier %>%
+select(Subjekt, Timepoint, Watt, Lactate) %>%
+filter(time == "Rre") %>%
+group_by(Subjekt, Timepoint) %>%
+mutate(n = n()) %>%
+
+pivot_longer(names_to =  "variable", 
+             values_to = "value", 
+             cols = age:n) %>%
+group_by(sex, include, variable) %>%
+summarise(m = mean(value), 
+          s = sd(value)) %>%
+ungroup() %>%
+mutate(m = signif(m, digits = 3), 
+       s = signif(s, digits = 2), 
+       ms = if_else(variable == "n", as.character(m), paste0(m, " (", s, ")")), 
+       sex_incl = paste(sex, include, sep = "_")) %>%
+dplyr::select(-m, -s, - sex, -include) %>%
+
+pivot_wider(names_from = sex_incl, 
+            values_from = ms) %>%
+select(variable, female_incl, female_excl, male_incl, male_excl) %>%
+mutate(variable = factor(variable, levels = c("n", "age", "weight", "height", "fat.whole"), 
+                         labels = c("N", "Age (years)", "Mass (kg)", 
+                                    "Stature (cm)", "Body fat (%)"))) %>%
+arrange(variable) %>%
+
+gt()
+```
 
 ## Reliabilitet
 
@@ -321,7 +374,7 @@ cmyc_dat <- cmyc_dat |>
 
 ```
 
-```{r} 
+```{r}
 #| output: false 
 
 ## ønsker et datasett med bare verdiene for de som inneholder prøve ps1
@@ -339,7 +392,7 @@ e_ps1  ## vil se resultatet
 
 For de kontrollrørene som inneholdt prøve "PS1" så var reaksjonseffektiviteten 71.3 %.
 
-```{r} 
+```{r}
 #| output: false
 
 ## ønsker å undersøke om reaksjonseffektiviteten er lik for PS2 
@@ -368,7 +421,7 @@ cmyc_dat_ps1 |>
   theme_minimal()
 ```
 
-For rørene med PS2 estimerer vi derimot reaksjonseffektiviteten til å være 250.6 %. For å kunne bruke prøvene videre i analyser ved hjelp av delta-delta-ct-metoden for å kunne si om prosentvis endringer i genuttrykk av myosin tungkjede isoformene etter en treningsintervensjon er det viktig at noen antagelser er møtt. En av disse har vi sjekket her ved at det burde være nærme 100 % reaksjonseffektivitet for PCR-reaksjonene, og våre resultater er ikke innenfor 0.9-1.1. I tillegg er det en annen antagelse om at effektiviteten av målgenet er lik kontrollgenet [livak2014]. Samtidig burde de to ulike kontrollene vi gjorde være like.
+For rørene med PS2 estimerer vi derimot reaksjonseffektiviteten til å være 250.6 %. For å kunne bruke prøvene videre i analyser ved hjelp av delta-delta-ct-metoden for å kunne si om prosentvis endringer i genuttrykk av myosin tungkjede isoformene etter en treningsintervensjon er det viktig at noen antagelser er møtt. En av disse har vi sjekket her ved at det burde være nærme 100 % reaksjonseffektivitet for PCR-reaksjonene, og våre resultater er ikke innenfor 0.9-1.1. I tillegg er det en annen antagelse om at effektiviteten av målgenet er lik kontrollgenet \[livak2014\]. Samtidig burde de to ulike kontrollene vi gjorde være like.
 
 At vi ikke er nærmere det som er å forvente kan ha flere årsaker. Lite erfaring med pippetering, samt at ulike personer har pippetert kan tenkes å gi en større unøyaktig. Det var ikke samme person som pippeterte kontrollene med PS1 som pippeterte de med PS2. Denne usikkerheten gir heller ikke mulighet for at eventuelle feil i pippetering kan bli systematisk like mye feil på begge prøvene.
 
@@ -411,7 +464,7 @@ library(gt)
 
 ## Innledning
 
-I denne siste delen av arbeidskravet skal vi bruke datasettet "hypertrophy" som er brukt i to studier [haun_2018 & haun_2019]. Basert på to variabler som vi har valgt skal vi lage en lineær modell og presentere denne i en tabell. Deretter diskuterer vi tabellen med spesielt fokus på p-verdien.
+I denne siste delen av arbeidskravet skal vi bruke datasettet "hypertrophy" som er brukt i to studier \[haun_2018 & haun_2019\]. Basert på to variabler som vi har valgt skal vi lage en lineær modell og presentere denne i en tabell. Deretter diskuterer vi tabellen med spesielt fokus på p-verdien.
 
 Tverrsnittsarealet til en muskelgruppe er den viktigste faktoren for vår maksimale muskelstyrke [@raastad_styrketrening_2010]. I datasettet vi har brukt er det ikke målt tverrsnitt for alle de involverte muskelgruppene i knebøy. Likevel kan vi forvente å se positiv korrelasjon mellom vastus lateralis tykkelse ved t1 (målt med ultralyd, i cm) og maksimal motstand (kg) på 3 repetisjoner (3RM) i knebøy ved samme tidspunkt. Det blir også hypotesen vår, at vi vil se en korrelasjon, der større tykkelse av vastus lateralis gir høyere 3RM i øvelsen knebøy.
 
@@ -473,4 +526,4 @@ ggplot(aes(x = VL_T1, y = SQUAT_3RM)) +
 
 ## Diskusjon
 
-Estimatet er allerede beskrevet i resultatdelen. Men videre i diskusjonsdelen vil standardfeilen, t-verdien og p-verdien diskuteres kort. Standardfeilen sier oss noe om hvor nøyaktig og pålitelig de estimerte koeffisientene er. T-verdien er tallet som brukes for å teste ut en nullhypotese. Utregningen er etsimert koeffesienten delt på standardavviket. P-verdien forteller oss hvor stor sannsynligheten er for at en observert forskjell mellom datasett skyldes tilfeldigheter. Dersom nullhypotesen er sann, ønsker man en p-verdi på mindre enn 0.05. I datasettet vårt fant vi at p-verdien var 0.01, noe som indikerer at det er stor sannsynlighet for at den observerte forskjellen skyldes tilfeldigheter. 
+Estimatet er allerede beskrevet i resultatdelen. Men videre i diskusjonsdelen vil standardfeilen, t-verdien og p-verdien diskuteres kort. Standardfeilen sier oss noe om hvor nøyaktig og pålitelig de estimerte koeffisientene er. T-verdien er tallet som brukes for å teste ut en nullhypotese. Utregningen er etsimert koeffesienten delt på standardavviket. P-verdien forteller oss hvor stor sannsynligheten er for at en observert forskjell mellom datasett skyldes tilfeldigheter. Dersom nullhypotesen er sann, ønsker man en p-verdi på mindre enn 0.05. I datasettet vårt fant vi at p-verdien var 0.01, noe som indikerer at det er stor sannsynlighet for at den observerte forskjellen skyldes tilfeldigheter.
