@@ -109,7 +109,7 @@ LT %>%
 
 I denne figuren er det brukt en tredjegrads polynommodell for å beregne laktaterskelen
 
-## "Pre-test": Watt ved 2- og 4 mmol L$^{-1}$
+## Watt ved 2- og 4 mmol L$^{-1}$ ved "pre-test"
 
 ```{r}
 
@@ -141,6 +141,8 @@ lactate.pre[2, 4] <- "4mmol"
 ```
 
 På "pre-test" sykler forsøkspersonen på 307 W ved en laktatverdi på 2 mmol L$^{-1}$, og på 343 W ved en laktatverdi på 4 mmol L$^{-1}$.
+
+Dette er gjort på alle forsøkspersonene (1-10), og finnes i tabell lenger ned. 
 
 ## Laktatprofil ved "meso3"
 
@@ -208,7 +210,7 @@ LT2 %>%
 
 ```
 
-## "Meso3": Watt ved 2- og 4 mmol L$^{-1}$
+## Watt ved 2- og 4 mmol L$^{-1}$ ved meso3
 
 ```{r}
 Laktatterskel.meso3 <- cyclingstudy %>%
@@ -240,23 +242,7 @@ lactate.meso3[2, 4] <- "4mmol"
 
 På "meso3" sykler forsøkspersonen på 310 W ved en laktatverdi på 2 mmol L$^{-1}$, og på 344 W ved en laktatverdi på 4 mmol L$^{-1}$.
 
-## Laktatverdi forsøkspersoner
-
-Forsøksperson 1: Pre: 212 W = 2mmol og 255 W = 4 mmol. Meso3: 243 W = 2 mmol og 283 W = 4 mmol
-
-Forsøksperson 2: Pre: 217 W = 2 mmol og 260 W = 4 mmol. Meso3: 253 W = 2 mmol og 289 W = 4 mmol
-
-Forsøksperson 3: Pre: 272 W = 2 mmol og 314 W = 4 mmol. Meso3: 310 W = 2 mmol og 353 W = 4 mmol.
-
-Forsøksperson 4: Pre: 220 W = 2 mmol og 266 W = 4 mmol. Meso3: 224 W = 2 mmol og 263 W = 4 mmol
-
-Forsøksperson 5: Pre: 236 W = 2 mmol og 309 W = 4 mmol. Meso3: 236 W = 2 mmol og 309 4 mmol
-
-Forsøksperson 6: Pre: 190 W = 2 mmol og 239 W = 4 mmol. Meso3: 227 W = 2 mmol og 257 W = 4 mmol
-
-Forsøksperson 8: Pre: 242 W = 2 mmol og 274 W = 4 mmol. Meso3: 281 W = 2 mmol og 319 W = 4 mmol
-
-Forsøksperson 9: Pre: 244 W = 2 mmol og 280 W = 4 mmol. Meso3: 253 W = 2 mmol og 291 W = 4 mmol
+## Tabell laktatverdi alle forsøkspersoner
 
 ```{r}
 
@@ -298,7 +284,7 @@ datasettlaktatverdier %>%
 ```{r}
 datasettlaktatverdier %>%
 select(Subjekt, Timepoint, Watt, Lactate) %>%
-filter(time == "Rre") %>%
+filter(time == "pre") %>%
 group_by(Subjekt, Timepoint) %>%
 mutate(n = n()) %>%
 
