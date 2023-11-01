@@ -261,13 +261,24 @@ library(tidyverse)
 datasettlaktatverdier %>%
   select (Subjekt, Timepoint, Watt, Lactate)%>%
   group_by(Subjekt)%>%
-  gt(caption = "Alle testdata for kvar enkelt person")%>%
+  gt(caption = "Alle testdata for hver enkelt person")%>%
   fmt_number(columns = Watt:Lactate,
              decimals=1)
+
   
   
   
-  cols_label(timepoint = "Tidspunkt",
+
+
+
+
+```
+
+```{r}
+
+
+
+  cols_label(timepoint = "Tidspunkt")
              hr.max = md("HR<sub>max</sub><br><small>"),
              w.max = md("W<sub>max</sub><br><small>"),
              vo2.rel.max = md("VO<sub>2max</sub><br><small>(ml min<sup>-1</sup>)"),
@@ -278,10 +289,6 @@ datasettlaktatverdier %>%
 
 
 
-
-```
-
-```{r}
 datasettlaktatverdier %>%
 select(Subjekt, Timepoint, Watt, Lactate) %>%
 filter(time == "pre") %>%
