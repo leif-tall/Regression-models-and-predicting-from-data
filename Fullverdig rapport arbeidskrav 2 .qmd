@@ -265,59 +265,9 @@ datasettlaktatverdier %>%
   fmt_number(columns = Watt:Lactate,
              decimals=1)
 
-  
-  
-  
-
-
-
 
 ```
 
-```{r}
-
-
-
-  cols_label(timepoint = "Tidspunkt")
-             hr.max = md("HR<sub>max</sub><br><small>"),
-             w.max = md("W<sub>max</sub><br><small>"),
-             vo2.rel.max = md("VO<sub>2max</sub><br><small>(ml min<sup>-1</sup>)"),
-             rer.max = md("RER"),
-             ve.max = md("VE<sub></sub><br><small>(l/min<sup>-1</sup>)"),
-             bf.max = md("BF"))%>%
-  tab_header(title = "VO2maks test")
-
-
-
-datasettlaktatverdier %>%
-select(Subjekt, Timepoint, Watt, Lactate) %>%
-filter(time == "pre") %>%
-group_by(Subjekt, Timepoint) %>%
-mutate(n = n()) %>%
-
-pivot_longer(names_to =  "variable", 
-             values_to = "value", 
-             cols = age:n) %>%
-group_by(sex, include, variable) %>%
-summarise(m = mean(value), 
-          s = sd(value)) %>%
-ungroup() %>%
-mutate(m = signif(m, digits = 3), 
-       s = signif(s, digits = 2), 
-       ms = if_else(variable == "n", as.character(m), paste0(m, " (", s, ")")), 
-       sex_incl = paste(sex, include, sep = "_")) %>%
-dplyr::select(-m, -s, - sex, -include) %>%
-
-pivot_wider(names_from = sex_incl, 
-            values_from = ms) %>%
-select(variable, female_incl, female_excl, male_incl, male_excl) %>%
-mutate(variable = factor(variable, levels = c("n", "age", "weight", "height", "fat.whole"), 
-                         labels = c("N", "Age (years)", "Mass (kg)", 
-                                    "Stature (cm)", "Body fat (%)"))) %>%
-arrange(variable) %>%
-
-gt()
-```
 
 ## Reliabilitet
 
